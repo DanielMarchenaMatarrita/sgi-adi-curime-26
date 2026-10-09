@@ -25,8 +25,8 @@
 | FIN-VAL-01 | Tesorería registra y confirma egresos ordinarios sin aprobación individual obligatoria de Presidencia; Fiscalía supervisa | `Expense`, `Disbursement`, `FinancialMovement` | [9.3A](../v2/checkpoints/9.3A-finanzas.md) |
 | FIN-VAL-02 | Ingreso confirmado con un solo destino —iniciativa o fondo general—; sin partición V2 | `FinancialMovement`, `Initiative` | [9.3B](../v2/checkpoints/9.3B-iniciativas.md) |
 | FIN-VAL-03 | `Initiative` agrupa obras, eventos o actividades sin duplicarlos; fondo general no es una iniciativa ficticia | `Initiative`, `Event`, `VolunteerOpportunity` | [9.3B](../v2/checkpoints/9.3B-iniciativas.md) |
-| FIN-MNT-VAL-01 | **Opción B:** reconocer el costo definitivo de mantenimiento únicamente después del cierre verificado | `MaintenanceWorkOrder`, `Expense` | [9.4B §1–2](../../data/target-v2/9.4B-borrador-relacional.md) |
-| FIN-MNT-VAL-02 | Registrar el anticipo cuando se desembolsa efectivamente: reduce caja y queda pendiente de liquidación, sin duplicar la salida al reconocer el costo final | `Disbursement`, `FinancialMovement`, `Expense` | [9.4B §1–2](../../data/target-v2/9.4B-borrador-relacional.md) |
+| FIN-MNT-VAL-01 | **Opción B:** reconocer el costo definitivo de mantenimiento únicamente después del cierre verificado | `MaintenanceWorkOrder`, `Expense` | [9.4B §1–2](../../../database/docs/target-v2/9.4B-borrador-relacional.md) |
+| FIN-MNT-VAL-02 | Registrar el anticipo cuando se desembolsa efectivamente: reduce caja y queda pendiente de liquidación, sin duplicar la salida al reconocer el costo final | `Disbursement`, `FinancialMovement`, `Expense` | [9.4B §1–2](../../../database/docs/target-v2/9.4B-borrador-relacional.md) |
 | INT-01 | Cada `Disbursement` referencia exactamente un `FinancialMovement`; un movimiento puede existir sin desembolso y admite como máximo un `Disbursement` | `Disbursement`, `FinancialMovement` | [9.3A](../v2/checkpoints/9.3A-finanzas.md) |
 | DOC-VAL-01 | Borradores versionables; documentos oficiales/evidencia inmutables y rectificables con historia | `DocumentRecord`, `DocumentVersion` | [9.3D](../v2/checkpoints/9.3D-documentos.md) |
 | DOC-VAL-02 | Foliación independiente por serie documental | `DocumentSeries` | [9.3D](../v2/checkpoints/9.3D-documentos.md) |
@@ -43,4 +43,4 @@
 - Validar todas las cardinalidades y sus acciones referenciales antes de migrar.
 - Preservar datos y contratos V1.1; no desplegar constraints definitivos antes de gates históricos.
 
-Ver [inventario completo](../../data/target-v2/entity-inventory.md) y [9.4B borrador](../../data/target-v2/9.4B-borrador-relacional.md).
+Ver [inventario completo](../../../database/docs/target-v2/entity-inventory.md) y [9.4B borrador](../../../database/docs/target-v2/9.4B-borrador-relacional.md).

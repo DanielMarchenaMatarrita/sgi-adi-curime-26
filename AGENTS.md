@@ -20,8 +20,10 @@
 
 - `docs/architecture/decisions/`: decisiones arquitectónicas formales.
 - `docs/architecture/v2/`: diagramas/checkpoints (incluye redibujos históricos debidamente etiquetados).
-- `docs/data/baseline-v1.1/`: contratos históricos, como **referencia**, no copia automática del esquema vivo.
-- `docs/data/target-v2/`: inventario, ERD, restricciones, borradores y freeze gates.
+- `database/docs/baseline-v1.1/`: contratos históricos, como **referencia**, no copia automática del esquema vivo.
+- `database/docs/target-v2/`: inventario, ERD, restricciones, borradores y freeze gates.
+- `docs/`: arquitectura, ADR, atlas, documentación funcional, seguridad, operaciones y calidad transversal.
+- `frontend/README.md` y `backend/README.md`: marcadores documentales locales de componentes; no crear documentación local vacía.
 - `docs/functional/`: reglas institucionales confirmadas y propuestas pendientes.
 
 ## Límites técnicos
