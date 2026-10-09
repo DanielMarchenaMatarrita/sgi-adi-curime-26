@@ -46,14 +46,14 @@ Monorepo con **pnpm workspaces**, sin exigir Nx ni Turborepo al inicio. Frontend
 
 ## Fuente de referencia de lectura
 
-Repositorio V1.1 del equipo: [SGI-Curime](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime). **No es destino de cambios de este proyecto.**
+Repositorio V1.1 autoritativo y solo de lectura: [SGI-Curime](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime/tree/e8e2beb33eea8c1207fe77fe65dbd3228362bc5f), revisión `e8e2beb33eea8c1207fe77fe65dbd3228362bc5f` (`main` HEAD observado 2026-10-08). **No es destino de cambios de este proyecto.**
 
 ## Publicación inicial con revisión
 
-El repositorio remoto comienza vacío. Antes de publicar documentación en `main`, usa la [política de rama dedicada](docs/architecture/decisions/ADR-0002-branch-first-bootstrap.md). En Windows con PowerShell 7, desde esta carpeta extraída y con Git autenticado:
+El bootstrap original exigía un remoto vacío y una carpeta extraída sin `.git`; la rama `chore/bootstrap-monorepo-v2` ya fue publicada, por lo que **no debe repetirse contra el remoto inicializado**. Como referencia controlada para un arranque autorizado desde cero, aplica la [política de rama dedicada](docs/architecture/decisions/ADR-0002-branch-first-bootstrap.md) y usa exactamente:
 
 ```powershell
-pwsh -File .\scripts\bootstrap-monorepo.ps1
+pwsh -File .\scripts\bootstrap-monorepo.ps1 -RemoteUrl 'https://github.com/DanielMarchenaMatarrita/sgi-adi-curime-26.git' -WorkBranch 'chore/bootstrap-monorepo-v2'
 ```
 
-La operación deja solo un README inicial en `main` y sube el resto a `chore/bootstrap-monorepo-v2`; no crea ni fusiona un Pull Request.
+El script conserva los parámetros `-RemoteUrl` y `-WorkBranch`, pero exige igualdad exacta y sensible a mayúsculas con los valores aprobados de la invocación anterior. Rechaza cualquier otro valor antes de ejecutar Git o mutar la raíz de trabajo. En un arranque autorizado, la operación deja solo un README inicial en `main` y sube el resto a `chore/bootstrap-monorepo-v2`; no crea ni fusiona un Pull Request.

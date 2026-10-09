@@ -7,7 +7,7 @@
 ## Dos niveles distintos de documentación
 
 1. **Documentación técnica del proyecto:** este atlas, con diagramas, fichas de decisión, relaciones y pendientes. No representa archivos institucionales generados por el SGI.
-2. **Capacidad documental del ERP:** diseño pendiente para almacenar actas, recibos, comprobantes, documentos técnicos y evidencias con sus permisos, folios, versiones y asociaciones tipadas.
+2. **Capacidad documental del ERP:** `DOC-VAL-01..04` están confirmadas; asociaciones físicas exactas, firma digital y otros detalles de implementación siguen pendientes.
 
 ## Índice
 
@@ -18,12 +18,16 @@
 - [9.3A — Egresos y autorizaciones](checkpoints/9.3A-finanzas.md)
 - [9.3B — Iniciativas y destinos](checkpoints/9.3B-iniciativas.md)
 - [9.3C — Préstamos, faltantes y donaciones](checkpoints/9.3C-conciliacion.md)
-- [9.3D — Documentos del ERP (propuesta)](checkpoints/9.3D-documentos.md)
+- [9.3D — Documentos del ERP](checkpoints/9.3D-documentos.md)
 - [Matriz de diagramas y decisiones](matriz-diagramas.md)
 - [Convenciones](convenciones.md)
 - [Pendientes y contradicciones](pendientes.md)
 
 ## Arquitectura funcional transversal
+
+**D-ATLAS-01 — Responsabilidades funcionales transversales**
+
+**Tipo:** flujo conceptual. **Estado:** redibujado; responsabilidades funcionales confirmadas, sin contrato de implementación. **Decisiones:** checkpoints `9.2A/9.2B`, `DON-INV-VAL-01`, `MNT-VAL-04`, `FIN-VAL-01..03`, `FIN-MNT-VAL-01/02`, `DOC-VAL-01..04`. **Procedencia:** composición propia del atlas a partir de los checkpoints 9.2A–9.3D; no representa arquitectura desplegada V1.1 ni agrega dependencias técnicas.
 
 ```mermaid
 flowchart TB
@@ -66,16 +70,16 @@ Este mapa describe **responsabilidades**, no dependencias de clases ni contratos
 - Los identificadores y nombres son **candidatos conceptuales** cuando no existen en el target V1.1.
 - Antes de incorporar al repositorio: comparar con `AGENTS.md`, `DESIGN.md`, atlas previo, modelo V1.1 y OpenSpec si aplica.
 
-## Línea base verificada
+## Línea base estructural verificada
 
-- Target V1.1: 49 entidades persistentes + 1 entidad transicional, 77 relaciones maestras, sujeto a gates de reconciliación.
+- Target V1.1: 49 entidades persistentes + 1 entidad transicional, 77 relaciones maestras, sujeto a gates de reconciliación. Evidencia y límites: [baseline V1.1](../../data/baseline-v1.1/README.md).
 - `Person` representa identidad física, `User` acceso y `Affiliate` afiliación; son conceptos diferentes.
 - `InventoryItem.currentQuantity` significa **cantidad disponible**, no existencia física total.
 - `Donation` V1.1 es monetaria; las recepciones en especie no deben crear ingresos monetarios ficticios.
 
 Referencias de lectura:
-- [Target Data Model V1.1](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime/blob/main/docs/data/v1.1/target-model.md)
-- [Reglas de integridad V1.1](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime/blob/main/docs/data/v1.1/integrity-rules.md)
-- [Prisma schema](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime/blob/main/backend/prisma/schema.prisma)
+- [Target Data Model V1.1](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime/blob/e8e2beb33eea8c1207fe77fe65dbd3228362bc5f/docs/data/v1.1/target-model.md)
+- [Reglas de integridad V1.1](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime/blob/e8e2beb33eea8c1207fe77fe65dbd3228362bc5f/docs/data/v1.1/integrity-rules.md)
+- [Prisma schema](https://github.com/matiasfarrierzuniga-rgb/SGI-Curime/blob/e8e2beb33eea8c1207fe77fe65dbd3228362bc5f/backend/prisma/schema.prisma)
 
-**No se ha escrito en GitHub ni se han modificado archivos de producción.**
+**Estado de publicación:** este atlas ya forma parte de la rama remota de revisión `chore/bootstrap-monorepo-v2`. No constituye despliegue, modificación del repositorio V1.1 autoritativo ni cambio de archivos de producción.

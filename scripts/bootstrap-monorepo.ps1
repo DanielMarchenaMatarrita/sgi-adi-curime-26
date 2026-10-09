@@ -16,6 +16,14 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+$approvedRemoteUrl = 'https://github.com/DanielMarchenaMatarrita/sgi-adi-curime-26.git'
+$approvedWorkBranch = 'chore/bootstrap-monorepo-v2'
+if ($RemoteUrl -cne $approvedRemoteUrl) {
+    throw "RemoteUrl no aprobado. Destino permitido: $approvedRemoteUrl"
+}
+if ($WorkBranch -cne $approvedWorkBranch) {
+    throw "WorkBranch no aprobada. Rama permitida: $approvedWorkBranch"
+}
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
 

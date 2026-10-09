@@ -1,6 +1,7 @@
 # ADR-0001 — Monorepo modular para SGI ADI Curime 26
 
-- **Estado:** Propuesta aceptada como orientación de diseño; publicación e implementación pendientes.
+- **Estado de decisión:** Aceptado.
+- **Estado de implementación:** estructura de monorepo y workspace presente; aplicaciones funcionales, infraestructura ejecutable y despliegue pendientes.
 - **Fecha:** 2026-10-08
 - **Contexto:** repositorio nuevo, independiente del repositorio compartido por el equipo. Se requiere documentación y futura implementación del SGI V2 con trazabilidad.
 

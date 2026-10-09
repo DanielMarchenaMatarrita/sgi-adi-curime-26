@@ -2,7 +2,7 @@
 
 ## Identidad y trazabilidad de diagramas
 
-Cada diagrama tiene código `D-<checkpoint>-<n>`, un título, tipo, referencias de decisiones y estado. Ej.: `D-9.3C-02`.
+Cada diagrama tiene código `D-<checkpoint-o-decisión>-<n>`, un título, tipo, referencias de decisiones, estado y procedencia. Ej.: `D-9.3C-02`; una vista gobernada directamente por un ADR puede usar `D-ADR-0001-01`.
 
 - `BASELINE V1.1`: entidad o regla existente en el Target V1.1.
 - `CONFIRMADO FUNCIONAL`: decisión expresamente tomada en los checkpoints; estructura física aún pendiente.
