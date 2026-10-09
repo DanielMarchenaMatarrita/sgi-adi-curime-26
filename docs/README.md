@@ -5,7 +5,7 @@
 | Sección | Contenido | Estado |
 |---|---|---|
 | [Arquitectura](architecture/README.md) | Monorepo, ADR y atlas de diagramas 9.2–9.3 | Borrador versionable |
-| [Modelo de datos](data/README.md) | Baseline V1.1 y consolidación relacional V2 | 9.4B en curso |
+| [Modelo de datos](../database/docs/README.md) | Baseline V1.1 y consolidación relacional V2 | 9.4B en curso |
 | [Procesos](functional/README.md) | Reglas funcionales y trazabilidad | Índice preparado |
 | [Seguridad](security/README.md) | RBAC, información sensible, auditoría | Índice preparado |
 | [Operación](operations/README.md) | Despliegues y operaciones futuras | Índice preparado |

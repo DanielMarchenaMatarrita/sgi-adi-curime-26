@@ -14,8 +14,8 @@
 
 ```mermaid
 flowchart TB
-  Web["apps/web · Portal público y ERP institucional"] --> Api["apps/api · Casos de uso y contratos"]
-  Api --> DB["PostgreSQL · Prisma"]
+  Web["frontend · Portal público y ERP institucional"] --> Api["backend · Casos de uso y contratos"]
+  Api --> DB["database · PostgreSQL y Prisma futuro"]
   Api --> Doc["Almacenamiento documental con controles de acceso"]
   Web -. "tipos comunes cuando proceda" .-> Shared["packages · Contratos"]
   Api -.-> Shared

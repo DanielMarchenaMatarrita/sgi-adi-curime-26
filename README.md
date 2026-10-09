@@ -10,27 +10,32 @@ Sistema de Gestión Integral de la Asociación de Desarrollo Integral de Curime.
 - [Portal de documentación](docs/README.md)
 - [Arquitectura del monorepo](docs/architecture/README.md)
 - [Atlas de diagramas por checkpoint](docs/architecture/v2/README.md)
-- [Inventario de entidades V1.1 y candidatas V2](docs/data/target-v2/entity-inventory.md)
-- [Borrador relacional 9.4B](docs/data/target-v2/9.4B-borrador-relacional.md)
+- [Inventario de entidades V1.1 y candidatas V2](database/docs/target-v2/entity-inventory.md)
+- [Borrador relacional 9.4B](database/docs/target-v2/9.4B-borrador-relacional.md)
 - [Registro de decisiones](docs/architecture/decisions/decision-register.md)
-- [Condiciones para congelar el diseño](docs/data/target-v2/freeze-gates.md)
+- [Condiciones para congelar el diseño](database/docs/target-v2/freeze-gates.md)
 
 ## Estructura
 
 ```text
-apps/
-  web/                  # React, TypeScript, Vite, Tailwind (futuro)
-  api/                  # NestJS, Prisma, PostgreSQL (futuro)
-packages/               # Librerías compartidas solo cuando haya necesidad real
-infra/                  # Docker y despliegue (futuro)
-docs/
+frontend/               # Portal y ERP; React, TypeScript, Vite, Tailwind (futuro)
+backend/                # API; NestJS (futuro). No contiene schema.prisma
+database/               # Workspace de datos; futuro schema: prisma/schema.prisma
+  docs/                 # Baseline V1.1, modelo V2, ERD, reglas y freeze gates
+docs/                   # Arquitectura, ADR, atlas, documentación transversal
   architecture/         # ADR, vistas de arquitectura, atlas y checkpoints
-  data/                 # Baseline V1.1, modelo V2, ERD, reglas, migraciones
   functional/           # Requerimientos, procesos y reglas de negocio
   security/             # Privacidad y autorización
   operations/           # Operación, respaldo y despliegue
   quality/              # Estrategia de verificación y evidencias
+packages/               # Librerías compartidas solo cuando haya necesidad real
+infra/                  # Docker y despliegue (futuro)
+scripts/                # Automatización controlada de repositorio
+.github/                # Automatización GitHub cuando exista
+.opencode/              # Evidencia operativa de ejecución y reportes de agentes
 ```
+
+Documentación local de componentes: [frontend](frontend/README.md), [backend](backend/README.md) y [datos](database/README.md). La documentación transversal y los ADR permanecen bajo [docs/](docs/README.md).
 
 ## Tecnología propuesta
 

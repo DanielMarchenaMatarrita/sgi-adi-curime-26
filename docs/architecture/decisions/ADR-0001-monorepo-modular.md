@@ -7,7 +7,7 @@
 
 ## Decisión
 
-Organizar código y documentación en un único monorepositorio con límites explícitos: `apps/web`, `apps/api`, `packages`, `infra`, `docs`. Usar pnpm workspaces como base sencilla **propuesta**. No introducir Nx/Turbo hasta que exista una necesidad observada.
+Organizar código y documentación en un único monorepositorio con límites explícitos: `frontend`, `backend`, `database`, `packages`, `infra` y `docs`. Usar pnpm workspaces como base sencilla **propuesta**. No introducir Nx/Turbo hasta que exista una necesidad observada.
 
 ## Consecuencias
 
