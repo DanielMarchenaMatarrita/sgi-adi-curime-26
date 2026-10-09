@@ -1,4 +1,4 @@
-# apps/web — Portal y ERP (reservado)
+# frontend — Portal y ERP (reservado)
 
 Área prevista para React, TypeScript, Vite y Tailwind CSS. **No hay aplicación inicializada aún.**
 

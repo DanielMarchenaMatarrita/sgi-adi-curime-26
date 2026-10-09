@@ -68,11 +68,11 @@ Este mapa describe **responsabilidades**, no dependencias de clases ni contratos
 - Los diagramas se mantienen en bloques Mermaid editables. Las salidas SVG/HTML/PNG se podrán generar posteriormente con el procedimiento real del repositorio y su skill `diagram-design`, previa verificación de la estructura existente.
 - Toda regla pendiente está expresamente marcada. No inferir una restricción FK definitiva a partir de una flecha de flujo.
 - Los identificadores y nombres son **candidatos conceptuales** cuando no existen en el target V1.1.
-- Antes de incorporar al repositorio: comparar con `AGENTS.md`, `DESIGN.md`, atlas previo, modelo V1.1 y OpenSpec si aplica.
+- Antes de incorporar al repositorio: comparar con `AGENTS.md`, `DESIGN.md`, atlas previo y modelo V1.1.
 
 ## Línea base estructural verificada
 
-- Target V1.1: 49 entidades persistentes + 1 entidad transicional, 77 relaciones maestras, sujeto a gates de reconciliación. Evidencia y límites: [baseline V1.1](../../data/baseline-v1.1/README.md).
+- Target V1.1: 49 entidades persistentes + 1 entidad transicional, 77 relaciones maestras, sujeto a gates de reconciliación. Evidencia y límites: [baseline V1.1](../../../database/docs/baseline-v1.1/README.md).
 - `Person` representa identidad física, `User` acceso y `Affiliate` afiliación; son conceptos diferentes.
 - `InventoryItem.currentQuantity` significa **cantidad disponible**, no existencia física total.
 - `Donation` V1.1 es monetaria; las recepciones en especie no deben crear ingresos monetarios ficticios.
