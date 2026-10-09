@@ -25,7 +25,7 @@
 
 **Clasificación:** **GENUINAMENTE ABIERTA — aprobación institucional**
 
-**Evidencia:** [9.2A](../../../architecture/v2/checkpoints/9.2A-gobernanza.md), [registro de decisiones](../../../architecture/decisions/decision-register.md).
+**Evidencia:** [9.2A](../../../../docs/architecture/v2/checkpoints/9.2A-gobernanza.md), [registro de decisiones](../../../../docs/architecture/decisions/decision-register.md).
 
 **Límite confirmado:** no está aprobada una entidad `BoardSessionAttendance` ni su ausencia. No alterar cardinalidades de Junta mientras la institución no decida.
 
@@ -37,7 +37,7 @@
 
 **Clasificación:** **GENUINAMENTE ABIERTA — aprobación institucional**
 
-**Evidencia:** `ASM-R12`, [9.2A](../../../architecture/v2/checkpoints/9.2A-gobernanza.md), [9.3D](../../../architecture/v2/checkpoints/9.3D-documentos.md).
+**Evidencia:** `ASM-R12`, [9.2A](../../../../docs/architecture/v2/checkpoints/9.2A-gobernanza.md), [9.3D](../../../../docs/architecture/v2/checkpoints/9.3D-documentos.md).
 
 **Límite confirmado:** `DocumentVersion` conserva borradores, correcciones e historia; esto no decide si cada sesión/asamblea tiene una sola identidad de acta o varias identidades lógicas.
 
@@ -49,7 +49,7 @@
 
 **Clasificación:** **PARCIALMENTE RESUELTA — refinamiento físico 9.4C**
 
-**Evidencia:** `DOC-VAL-01..04`, [9.3D](../../../architecture/v2/checkpoints/9.3D-documentos.md).
+**Evidencia:** `DOC-VAL-01..04`, [9.3D](../../../../docs/architecture/v2/checkpoints/9.3D-documentos.md).
 
 **Límite confirmado:** versionado, historia, documentos oficiales/evidencia inmutables, rectificación histórica, foliación por serie/año y RBAC contextual están validados. No está validado que todos los trámites exijan el mismo documento.
 
@@ -61,7 +61,7 @@
 
 **Clasificación:** **GENUINAMENTE ABIERTA — aprobación institucional**
 
-**Evidencia:** temas pendientes de [9.3D](../../../architecture/v2/checkpoints/9.3D-documentos.md).
+**Evidencia:** temas pendientes de [9.3D](../../../../docs/architecture/v2/checkpoints/9.3D-documentos.md).
 
 **Límite confirmado:** documentos oficiales son inmutables y rectificables con historia; no se ha aprobado método de firma, validación formal ni retención.
 
@@ -73,7 +73,7 @@
 
 **Clasificación:** **RESUELTA POR DECISIÓN VALIDADA**
 
-**Evidencia:** `DOC-VAL-02/03`, [9.3D](../../../architecture/v2/checkpoints/9.3D-documentos.md).
+**Evidencia:** `DOC-VAL-02/03`, [9.3D](../../../../docs/architecture/v2/checkpoints/9.3D-documentos.md).
 
 **Límite confirmado:** el folio completo es una cadena inmutable y nunca se reutiliza, incluso si queda anulado; se conserva la razón de anulación. La unicidad física permanece exactamente en `(seriesId, folioYear, folioSequence)`; no existe unicidad por folio global.
 
@@ -85,7 +85,7 @@
 
 **Clasificación:** **PARCIALMENTE RESUELTA — refinamiento físico 9.4C**
 
-**Evidencia:** `MNT-VAL-05`, [9.2D](../../../architecture/v2/checkpoints/9.2D-mantenimiento.md), registro de decisiones.
+**Evidencia:** `MNT-VAL-05`, [9.2D](../../../../docs/architecture/v2/checkpoints/9.2D-mantenimiento.md), registro de decisiones.
 
 **Límite confirmado:** la evidencia de mantenimiento siempre es digital; su cantidad y contenido son proporcionales al riesgo; la verificación de aptitud precede restitución y cierre. No reabrir si la evidencia puede ser digital.
 
@@ -97,7 +97,7 @@
 
 **Clasificación:** **GENUINAMENTE ABIERTA — aprobación institucional**
 
-**Evidencia:** `FIN-VAL-01`, [9.3A](../../../architecture/v2/checkpoints/9.3A-finanzas.md), borrador 9.4B.
+**Evidencia:** `FIN-VAL-01`, [9.3A](../../../../docs/architecture/v2/checkpoints/9.3A-finanzas.md), borrador 9.4B.
 
 **Límite confirmado:** Tesorería puede confirmar egresos ordinarios sin aprobación presidencial individual obligatoria; Fiscalía supervisa. No inventar montos ni categorías extraordinarias.
 
@@ -109,7 +109,7 @@
 
 **Clasificación:** **GENUINAMENTE ABIERTA — aprobación institucional**
 
-**Evidencia:** `FIN-VAL-02/03`, [9.3B](../../../architecture/v2/checkpoints/9.3B-iniciativas.md).
+**Evidencia:** `FIN-VAL-02/03`, [9.3B](../../../../docs/architecture/v2/checkpoints/9.3B-iniciativas.md).
 
 **Límite confirmado:** un ingreso confirmado tiene un solo destino —`Initiative` o fondo general— y no se particiona en V2; fondo general no es una iniciativa ficticia. El destino confirmado no se cambia silenciosamente.
 
@@ -121,7 +121,7 @@
 
 **Clasificación:** **PARCIALMENTE RESUELTA — refinamiento físico 9.4C**
 
-**Evidencia:** [9.2B](../../../architecture/v2/checkpoints/9.2B-eventos.md).
+**Evidencia:** [9.2B](../../../../docs/architecture/v2/checkpoints/9.2B-eventos.md).
 
 **Límite confirmado:** cambios de evento requieren aprobación presidencial y registro de auditoría. `EventRevision` es distinto de `EventReviewDecision`; no asumir que un `User` con rol genérico acredita autoridad.
 
@@ -133,7 +133,7 @@
 
 **Clasificación:** **RESUELTA POR DECISIÓN VALIDADA**
 
-**Evidencia:** borrador 9.4B, [9.2C](../../../architecture/v2/checkpoints/9.2C-donaciones.md), decisiones preservadas sobre identidades.
+**Evidencia:** borrador 9.4B, [9.2C](../../../../docs/architecture/v2/checkpoints/9.2C-donaciones.md), decisiones preservadas sobre identidades.
 
 **Límite confirmado:** los donantes deben ser identificables, pero no necesitan una cuenta `User`. `Donor` permanece distinto de `Person`, `User` y `Affiliate`; no se permiten alternativas de anonimato.
 

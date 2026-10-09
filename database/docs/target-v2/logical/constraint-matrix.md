@@ -5,7 +5,7 @@
 ## Leyenda
 
 - **BASELINE V1.1:** contrato verificado contra revisión `e8e2beb33eea8c1207fe77fe65dbd3228362bc5f`.
-- **DECISIÓN VALIDADA:** semántica funcional aprobada en [registro](../../../architecture/decisions/decision-register.md).
+- **DECISIÓN VALIDADA:** semántica funcional aprobada en [registro](../../../../docs/architecture/decisions/decision-register.md).
 - **PROPUESTA ARQUITECTÓNICA:** enforcement lógico recomendado, pendiente de freeze/9.4C.
 - **CONDICIONADA:** depende de decisión institucional.
 - Capas: **Prisma** (PK/FK/UQ/nullability); **PostgreSQL SQL** (`CHECK`, parcial, exclusión, trigger/política); **TX/servicio** (lectura/escritura atómica y autorización contextual); **Gate** (reconciliación antes de endurecer).

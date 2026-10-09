@@ -9,7 +9,7 @@
 ## Leyenda
 
 - **BASELINE V1.1:** hecho congelado en fuente fijada; no implica datos conciliados.
-- **DECISIÓN VALIDADA:** regla funcional aprobada en [registro de decisiones](../../../architecture/decisions/decision-register.md).
+- **DECISIÓN VALIDADA:** regla funcional aprobada en [registro de decisiones](../../../../docs/architecture/decisions/decision-register.md).
 - **PROPUESTA ARQUITECTÓNICA:** forma lógica recomendada para materializar reglas; requiere freeze posterior.
 - **CONDICIONADA:** existencia depende de aprobación institucional.
 - **Gate:** condición de reconciliación antes de `NOT NULL`, eliminación o constraint destructivo.
@@ -97,7 +97,7 @@ Campos listados son **PROPUESTA ARQUITECTÓNICA**, salvo semántica respaldada p
 
 | # | Dominio | Entidad / estado | PK propuesta | CK/UQ propuesta | Campos FK propuestos y nulabilidad | Validación / fuente |
 |---:|---|---|---|---|---|---|
-| V2-01 | Gobernanza | `BoardSession` — principal | `id` | `(termId, sessionNumber)`; número local por período | `termId → GovernanceTerm.id` | P; [9.2A](../../../architecture/v2/checkpoints/9.2A-gobernanza.md) |
+| V2-01 | Gobernanza | `BoardSession` — principal | `id` | `(termId, sessionNumber)`; número local por período | `termId → GovernanceTerm.id` | P; [9.2A](../../../../docs/architecture/v2/checkpoints/9.2A-gobernanza.md) |
 | V2-02 | Gobernanza | `BoardMinute` — principal | `id` | `boardSessionId` | `boardSessionId → BoardSession.id`; `documentRecordId? → DocumentRecord.id` | P; 0..1 por sesión; lifecycle abierto |
 | V2-03 | Gobernanza | `BoardResolution` — principal | `id` | `(boardSessionId, resolutionNumber)` | `boardSessionId → BoardSession.id`; `documentRecordId? → DocumentRecord.id` | P; acuerdo de Junta distinto de Asamblea |
 | V2-04 | Gobernanza | `BoardSessionAttendance` — **CONDICIONADA** | `id` | `(boardSessionId, membershipId)` | `boardSessionId → BoardSession.id`; `membershipId → GovernanceMembership.id` | C; solo si se aprueba registro individual estructurado |
@@ -174,4 +174,4 @@ Todos son **PROPUESTA ARQUITECTÓNICA**; preservan contratos baseline hasta gate
 1. [Baseline V1.1 y revisión fijada](../../baseline-v1.1/README.md).
 2. `schema.prisma`, `target-model.md` e `integrity-rules.md` fijados en `e8e2beb33eea8c1207fe77fe65dbd3228362bc5f`.
 3. [Inventario 49/31](../entity-inventory.md), [borrador 9.4B](../9.4B-borrador-relacional.md), [freeze gates](../freeze-gates.md).
-4. [Registro de decisiones](../../../architecture/decisions/decision-register.md) y checkpoints 9.2A–9.3D enlazados allí.
+4. [Registro de decisiones](../../../../docs/architecture/decisions/decision-register.md) y checkpoints 9.2A–9.3D enlazados allí.

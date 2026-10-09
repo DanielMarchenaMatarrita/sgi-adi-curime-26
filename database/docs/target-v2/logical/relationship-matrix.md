@@ -12,7 +12,7 @@
 - Tratamiento: **KEEP** conserva contrato; **REFINE** conserva relación y endurece/completa semántica; **REPLACE** mantiene historia durante transición pero cambia destino lógico; **RETIRE** elimina solo tras gate. Ninguna fila autoriza DDL.
 - Cardinalidad `Padre 1 ← 0..N Hijo` expresa cada hijo con FK obligatoria; `Padre 0..1 ← 0..N Hijo`, FK nullable; `← 0..1` del lado hijo indica FK UQ.
 - Acciones se expresan `ON DELETE / ON UPDATE`. Todas las baseline se transcriben del Prisma fijado.
-- Fuentes: `S` schema fijado; `IR` integrity-rules V1.1; `DR` [registro V2](../../../architecture/decisions/decision-register.md); `9.x` checkpoint enlazado; `A` [catálogo lógico](entity-catalog.md).
+- Fuentes: `S` schema fijado; `IR` integrity-rules V1.1; `DR` [registro V2](../../../../docs/architecture/decisions/decision-register.md); `9.x` checkpoint enlazado; `A` [catálogo lógico](entity-catalog.md).
 
 ## A. Reconciliación nominal de 77 relaciones propietarias BASELINE V1.1
 
@@ -342,4 +342,4 @@ Código de serie institucional es canónico, UQ, histórico y no cambia después
 
 - [Catálogo lógico](entity-catalog.md), [restricciones](constraint-matrix.md), [decisiones abiertas](open-decisions.md).
 - [9.4B borrador](../9.4B-borrador-relacional.md), corregido aquí para eliminar UQ global de folio y fijar relaciones financieras aprobadas.
-- [Checkpoints 9.2A–9.3D](../../../architecture/v2/checkpoints/) y [registro de decisiones](../../../architecture/decisions/decision-register.md).
+- [Checkpoints 9.2A–9.3D](../../../../docs/architecture/v2/checkpoints/) y [registro de decisiones](../../../../docs/architecture/decisions/decision-register.md).
