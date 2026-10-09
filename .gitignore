@@ -10,3 +10,6 @@ coverage/
 .vscode/
 !.vscode/extensions.json
 .pnpm-store/
+
+# Local agent execution reports
+.opencode/reports/
