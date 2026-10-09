@@ -24,5 +24,6 @@
 | D-9.4B-01 | Borrador relacional | FIN-MNT | ER | FIN-MNT-VAL-01/02, FIN-VAL-01, INT-01 | Candidato conceptual; no congelado |
 | D-9.4B-02 | Borrador relacional | Inventario y donaciones | ER | DON-VAL-04..08, DON-INV-VAL-01, INV-VAL-01..05 | Candidato conceptual; no congelado |
 | D-9.4B-03 | Borrador relacional | Documentos institucionales | ER | DOC-VAL-01..04 | Candidato conceptual; no congelado |
+| D-9.4B-FOL-01 | 9.4B foliación | Series, contador técnico, documentos y versiones | ER documental Mermaid | DOC-VAL-01..04, OD-05 | Candidato/contrato no congelado; `DocumentFolioCounter` técnico fuera de 31 candidatas |
 
 Cada ID es una referencia estable para tablas de decisión, tickets y futuros diagramas UML físicos. Al reemplazar un diagrama redibujado por su original exacto, conservar el ID y actualizar su procedencia.
