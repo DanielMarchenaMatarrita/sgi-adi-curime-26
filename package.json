@@ -3,5 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "description": "SGI ADI Curime V2 monorepo design workspace",
-  "scripts": {}
+  "scripts": {
+    "prisma:validate": "prisma validate --schema database/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema database/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3"
+  },
+  "devDependencies": {
+    "prisma": "6.19.3"
+  }
 }
