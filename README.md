@@ -14,6 +14,7 @@ Sistema de Gestión Integral de la Asociación de Desarrollo Integral de Curime.
 - [Borrador relacional 9.4B](database/docs/target-v2/9.4B-borrador-relacional.md)
 - [Registro de decisiones](docs/architecture/decisions/decision-register.md)
 - [Condiciones para congelar el diseño](database/docs/target-v2/freeze-gates.md)
+- [C5 — Validación inicial de migración V2](reports/V2_INITIAL_MIGRATION_VALIDATION.md): validación posterior confirmada en PostgreSQL 17 local y Supabase SQL Editor manual; límites y pendientes en reporte.
 
 ## Estructura
 
