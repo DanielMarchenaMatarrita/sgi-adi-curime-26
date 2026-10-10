@@ -1,0 +1,2104 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Frozen Target V1.1: 49 persistent models plus one transitional manifest.
+// Nullable Target links marked by reconciliation gates remain nullable until
+// evidence-backed enforcement
+// legacy scalar snapshots remain for cutover.
+
+model OrganizationProfile {
+  id                                Int                            @id @default(1)
+  legalName                         String?
+  legalIdentification               String?
+  dinadecoRegistrationCode          String?
+  dinadecoRegion                    String?
+  organizationType                  InstitutionalOrganizationType?
+  province                          String?
+  canton                            String?
+  district                          String?
+  locality                          String?
+  correspondenceAddress             String?
+  phone                             String?
+  telefax                           String?
+  email                             String?
+  canonicalLegalName                String?                        @db.VarChar(200)
+  canonicalLegalIdentification      String?                        @db.VarChar(64)
+  canonicalDinadecoRegistrationCode String?                        @db.VarChar(64)
+  canonicalOrganizationType         String?                        @db.VarChar(100)
+  canonicalRegion                   String?                        @db.VarChar(100)
+  canonicalProvince                 String?                        @db.VarChar(100)
+  canonicalCanton                   String?                        @db.VarChar(100)
+  canonicalDistrict                 String?                        @db.VarChar(100)
+  canonicalPhysicalAddress          String?                        @db.VarChar(500)
+  canonicalNotificationPhone        String?                        @db.VarChar(40)
+  canonicalNotificationFax          String?                        @db.VarChar(40)
+  canonicalNotificationEmail        String?                        @db.VarChar(254)
+  createdAt                         DateTime                       @default(now())
+  updatedAt                         DateTime                       @updatedAt
+
+  @@map("InstitutionalProfile")
+}
+
+model Person {
+  id                            Int                              @id @default(autoincrement())
+  firstName                     String?
+  firstSurname                  String?
+  secondSurname                 String?
+  legacyFullName                String?
+  identification                String?
+  identificationType            IdentificationType?
+  normalizedIdentification      String?
+  birthDate                     DateTime?
+  email                         String?
+  phoneCountryCode              String?
+  phoneNationalNumber           String?
+  address                       String?
+  createdAt                     DateTime                         @default(now())
+  updatedAt                     DateTime                         @updatedAt
+  user                          User?
+  affiliate                     Affiliate?
+  userRequests                  UserRequest[]
+  affiliateRequests             AffiliateRequest[]
+  donations                     Donation[]
+  volunteerApplications         VolunteerApplication[]
+  volunteerParticipations       VolunteerParticipation[]
+  ventureAssociations           VentureAssociation[]
+  ventureRequests               VentureRequest[]
+  reconciliationManifestEntries IdentityReconciliationManifest[] @relation("ManifestSelectedPerson")
+  donorProfile                  Donor?
+  maintenanceIncidents          MaintenanceIncident[]            @relation("IncidentReporter")
+  maintenanceWorkOrders         MaintenanceWorkOrder[]           @relation("WorkOrderExecutor")
+
+  @@unique([identificationType, normalizedIdentification])
+}
+
+model Role {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          Int              @id @default(autoincrement())
+  code        String           @unique
+  name        String
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model User {
+  id                          Int                             @id @default(autoincrement())
+  fullName                    String
+  identification              String                          @unique
+  email                       String                          @unique
+  phone                       String?
+  address                     String?
+  passwordHash                String?
+  status                      UserStatus                      @default(ACTIVE)
+  failedLoginAttempts         Int                             @default(0)
+  lockedAt                    DateTime?
+  lastLoginAt                 DateTime?
+  roleId                      Int
+  personId                    Int?                            @unique
+  identificationType          IdentificationType?
+  phoneCountryCode            String?
+  phoneNationalNumber         String?
+  subscriptionExpirationDate  DateTime?
+  createdAt                   DateTime                        @default(now())
+  updatedAt                   DateTime                        @updatedAt
+  role                        Role                            @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  person                      Person?                         @relation(fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sessions                    Session[]
+  auditLogs                   AuditLog[]
+  passwordResetTokens         PasswordResetToken[]
+  activationTokens            AccountActivationToken[]
+  reviewedUserRequests        UserRequest[]                   @relation("UserRequestReviewer")
+  reviewedAffiliateRequests   AffiliateRequest[]              @relation("AffiliateRequestReviewer")
+  createdSanctions            AffiliateSanction[]             @relation("SanctionCreator")
+  reviewedJustifications      AbsenceJustification[]          @relation("JustificationReviewer")
+  requestedReservations       Reservation[]                   @relation("ReservationRequester")
+  approvedReservations        Reservation[]                   @relation("ReservationApprover")
+  recordedPayments            Payment[]                       @relation("PaymentRecorder")
+  recordedFinancialMovements  FinancialMovement[]             @relation("FinancialMovementRecorder")
+  voidedFinancialMovements    FinancialMovement[]             @relation("FinancialMovementVoider")
+  recordedDonations           Donation[]                      @relation("DonationRecorder")
+  cancelledDonations          Donation[]                      @relation("DonationCanceller")
+  inventoryMovements          InventoryMovement[]
+  inventoryLoansCreated       InventoryLoan[]                 @relation("LoanCreator")
+  inventoryLoansReceived      InventoryLoan[]                 @relation("LoanReceiver")
+  inventoryLoansCancelled     InventoryLoan[]                 @relation("LoanCanceller")
+  volunteerOpportunities      VolunteerOpportunity[]
+  reviewedVolunteerApps       VolunteerApplication[]          @relation("VolunteerApplicationReviewer")
+  recordedVolunteerAttendance VolunteerAttendance[]
+  eventRevisions              EventRevision[]                 @relation("EventRevisionSubmitter")
+  eventReviewDecisions        EventReviewDecision[]           @relation("EventReviewDecisionActor")
+  inKindDonationsRecorded     InKindDonation[]                @relation("InKindDonationRecorder")
+  inKindDecisions             InKindDonationDecision[]        @relation("InKindDecisionActor")
+  inKindReceipts              InKindDonationReceipt[]         @relation("InKindReceiptReceiver")
+  authorizedWorkOrders        MaintenanceWorkOrder[]          @relation("WorkOrderAuthorizer")
+  releasedUnavailability      ResourceUnavailability[]        @relation("UnavailabilityReleaser")
+  loanReturnsReceived         InventoryLoanReturn[]           @relation("LoanReturnReceiver")
+  shortageDecisions           InventoryLoanShortageDecision[] @relation("ShortageDecisionActor")
+  documentVersionsCreated     DocumentVersion[]               @relation("DocumentVersionCreator")
+  expenseDocumentLogs         ExpenseDocumentLog[]            @relation("ExpenseDocumentLogActor")
+  correspondenceLogs          CorrespondenceLog[]             @relation("CorrespondenceLogActor")
+  disbursementsSettled        Disbursement[]                  @relation("DisbursementSettler")
+}
+
+model Session {
+  id               Int       @id @default(autoincrement())
+  refreshTokenHash String    @unique
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  revocationReason String?
+  createdAt        DateTime  @default(now())
+  userId           Int
+  user             User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  action     String
+  module     String
+  entityType String?
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  userId     Int?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([module])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AccountActivationToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model UserRequest {
+  id                           Int                 @id @default(autoincrement())
+  fullName                     String
+  identification               String
+  email                        String
+  phone                        String?
+  address                      String?
+  reason                       String
+  status                       RequestStatus       @default(PENDING)
+  rejectionReason              String?
+  reviewedAt                   DateTime?
+  reviewedById                 Int?
+  identificationType           IdentificationType?
+  phoneCountryCode             String?
+  phoneNationalNumber          String?
+  personId                     Int?
+  // Additive immutable submission evidence. Generic fields remain legacy
+  // aliases until Stage E certification authorizes their removal.
+  submittedFullName            String?
+  submittedIdentification      String?
+  submittedIdentificationType  IdentificationType?
+  submittedEmail               String?
+  submittedPhone               String?
+  submittedPhoneCountryCode    String?
+  submittedPhoneNationalNumber String?
+  submittedAddress             String?
+  submittedReason              String?
+  createdAt                    DateTime            @default(now())
+  updatedAt                    DateTime            @updatedAt
+  reviewedBy                   User?               @relation("UserRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  person                       Person?             @relation(fields: [personId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([identification])
+  @@index([email])
+  @@index([status])
+  @@index([reviewedById])
+  @@index([personId])
+}
+
+model Affiliate {
+  id                    Int                    @id @default(autoincrement())
+  fullName              String
+  identification        String                 @unique
+  birthDate             DateTime
+  gender                String?
+  phone                 String?
+  email                 String?                @unique
+  address               String
+  occupation            String?
+  workplace             String?
+  affiliateType         String?
+  affiliationDate       DateTime               @default(now())
+  status                AffiliateStatus        @default(ACTIVE)
+  identificationType    IdentificationType?
+  phoneCountryCode      String?
+  phoneNationalNumber   String?
+  personId              Int?                   @unique
+  legacyRoleId          Int?                   @map("roleId")
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  person                Person?                @relation(fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sanctions             AffiliateSanction[]
+  governanceMemberships GovernanceMembership[]
+  assemblyConvocations  AssemblyConvocation[]
+  inventoryLoans        InventoryLoan[]
+
+  @@index([legacyRoleId], map: "Affiliate_roleId_idx")
+}
+
+model AffiliateRequest {
+  id                           Int                 @id @default(autoincrement())
+  fullName                     String
+  identification               String
+  birthDate                    DateTime
+  gender                       String?
+  phone                        String?
+  email                        String?
+  address                      String
+  occupation                   String?
+  workplace                    String?
+  affiliationReason            String
+  status                       RequestStatus       @default(PENDING)
+  rejectionReason              String?
+  reviewedAt                   DateTime?
+  reviewedById                 Int?
+  identificationType           IdentificationType?
+  phoneCountryCode             String?
+  phoneNationalNumber          String?
+  personId                     Int?
+  // Additive immutable submission evidence. Generic fields remain legacy
+  // aliases until Stage E certification authorizes their removal.
+  submittedFullName            String?
+  submittedIdentification      String?
+  submittedIdentificationType  IdentificationType?
+  submittedBirthDate           DateTime?
+  submittedGender              String?
+  submittedPhone               String?
+  submittedPhoneCountryCode    String?
+  submittedPhoneNationalNumber String?
+  submittedEmail               String?
+  submittedAddress             String?
+  submittedOccupation          String?
+  submittedWorkplace           String?
+  submittedAffiliationReason   String?
+  createdAt                    DateTime            @default(now())
+  updatedAt                    DateTime            @updatedAt
+  reviewedBy                   User?               @relation("AffiliateRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  person                       Person?             @relation(fields: [personId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([identification])
+  @@index([email])
+  @@index([status])
+  @@index([reviewedById])
+  @@index([personId])
+}
+
+model AffiliateSanction {
+  id          Int            @id @default(autoincrement())
+  reason      String
+  description String?
+  date        DateTime       @default(now())
+  status      SanctionStatus @default(ACTIVE)
+  affiliateId Int
+  createdById Int
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  affiliate   Affiliate      @relation(fields: [affiliateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy   User           @relation("SanctionCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([affiliateId])
+  @@index([status])
+  @@index([date])
+  @@index([createdById])
+}
+
+model GovernancePosition {
+  id          Int                    @id @default(autoincrement())
+  code        String                 @unique
+  name        String
+  description String?
+  isActive    Boolean                @default(true)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  memberships GovernanceMembership[]
+}
+
+model GovernanceTerm {
+  id                           Int                    @id @default(autoincrement())
+  legacyInstitutionalProfileId Int                    @map("institutionalProfileId")
+  startDate                    DateTime               @map("startsOn") @db.Date
+  endDate                      DateTime               @map("endsOn") @db.Date
+  status                       GovernanceTermStatus?
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime               @updatedAt
+  memberships                  GovernanceMembership[]
+
+  boardSessions BoardSession[]
+
+  @@index([legacyInstitutionalProfileId, startDate], map: "BoardTerm_institutionalProfileId_startsOn_idx")
+  @@map("BoardTerm")
+}
+
+model GovernanceMembership {
+  id                      Int                             @id @default(autoincrement())
+  termId                  Int                             @map("boardTermId")
+  legacyPersonId          Int                             @map("personId")
+  legacyPosition          BoardPosition                   @map("position")
+  positionId              Int?
+  affiliateId             Int?
+  seatNumber              Int?
+  startedAt               DateTime?                       @map("startsOn") @db.Date
+  endedAt                 DateTime?                       @map("endsOn") @db.Date
+  appointedByAssemblyId   Int?
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  term                    GovernanceTerm                  @relation(fields: [termId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  position                GovernancePosition?             @relation(fields: [positionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  affiliate               Affiliate?                      @relation(fields: [affiliateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  appointedByAssembly     Assembly?                       @relation("AssemblyAppointments", fields: [appointedByAssemblyId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  convocations            AssemblyConvocation[]
+  eventReviewDecisions    EventReviewDecision[]
+  inKindDonationDecisions InKindDonationDecision[]
+  shortageDecisions       InventoryLoanShortageDecision[]
+
+  @@index([termId], map: "BoardAppointment_boardTermId_idx")
+  @@index([legacyPersonId], map: "BoardAppointment_personId_idx")
+  @@index([legacyPosition, seatNumber], map: "BoardAppointment_position_seatNumber_idx")
+  @@index([positionId])
+  @@index([affiliateId])
+  @@index([appointedByAssemblyId])
+  @@map("BoardAppointment")
+}
+
+model Assembly {
+  id                   Int                    @id @default(autoincrement())
+  title                String
+  type                 AssemblyType?          @map("assemblyType")
+  legacyType           String?                @map("type")
+  legacyDate           DateTime               @map("date")
+  scheduledAt          DateTime?
+  heldAt               DateTime?
+  place                String
+  description          String?
+  status               AssemblyStatus         @default(SCHEDULED)
+  legacyQuorumType     AssemblyQuorumType?    @map("quorumType")
+  legacyQuorumValue    Int?                   @map("quorumValue")
+  convocationsLockedAt DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  calls                AssemblyCall[]
+  convocations         AssemblyConvocation[]
+  minute               AssemblyMinute?        @relation("AssemblyMinuteAssembly")
+  resolutions          AssemblyResolution[]
+  appointedMemberships GovernanceMembership[] @relation("AssemblyAppointments")
+
+  @@index([legacyDate], map: "Assembly_date_idx")
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model AssemblyCall {
+  id          Int                @id @default(autoincrement())
+  assemblyId  Int
+  callNumber  Int
+  scheduledAt DateTime
+  quorumType  AssemblyQuorumType
+  quorumValue Int
+  startedAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  assembly    Assembly           @relation(fields: [assemblyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([assemblyId, callNumber])
+  @@index([scheduledAt])
+}
+
+model AssemblyConvocation {
+  id                     Int                   @id @default(autoincrement())
+  assemblyId             Int
+  affiliateId            Int
+  legacyRoleId           Int?                  @map("roleId")
+  legacyRoleNameSnapshot String                @map("roleNameSnapshot")
+  governanceMembershipId Int?
+  positionNameSnapshot   String?
+  convenedAt             DateTime              @default(now())
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  assembly               Assembly              @relation(fields: [assemblyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  affiliate              Affiliate             @relation(fields: [affiliateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  governanceMembership   GovernanceMembership? @relation(fields: [governanceMembershipId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  attendance             AssemblyAttendance?
+
+  @@unique([assemblyId, affiliateId])
+  @@index([assemblyId])
+  @@index([affiliateId])
+  @@index([legacyRoleId], map: "AssemblyConvocation_roleId_idx")
+  @@index([governanceMembershipId])
+}
+
+model AssemblyAttendance {
+  id                Int                   @id @default(autoincrement())
+  status            AttendanceStatus
+  registeredAt      DateTime              @default(now())
+  observations      String?
+  legacyAssemblyId  Int                   @map("assemblyId")
+  legacyAffiliateId Int                   @map("affiliateId")
+  convocationId     Int?                  @unique
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  convocation       AssemblyConvocation?  @relation(fields: [convocationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  justification     AbsenceJustification?
+
+  @@unique([legacyAssemblyId, legacyAffiliateId], map: "AssemblyAttendance_assemblyId_affiliateId_key")
+  @@index([legacyAssemblyId, status], map: "AssemblyAttendance_assemblyId_status_idx")
+  @@index([legacyAffiliateId], map: "AssemblyAttendance_affiliateId_idx")
+}
+
+model AbsenceJustification {
+  id                     Int                 @id @default(autoincrement())
+  reason                 String
+  status                 JustificationStatus @default(PENDING)
+  rejectionReason        String?
+  reviewedAt             DateTime?
+  legacyAssemblyId       Int                 @map("assemblyId")
+  legacyAffiliateId      Int                 @map("affiliateId")
+  attendanceId           Int?                @unique
+  reviewedById           Int?
+  decisionNote           String?
+  attachmentOriginalName String?
+  attachmentMimeType     String?
+  attachmentSize         Int?
+  attachmentUrl          String?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  attendance             AssemblyAttendance? @relation(fields: [attendanceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reviewedBy             User?               @relation("JustificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([legacyAssemblyId, legacyAffiliateId], map: "AbsenceJustification_assemblyId_affiliateId_key")
+  @@index([status])
+  @@index([reviewedById])
+}
+
+model AssemblyMinute {
+  id               Int             @id @default(autoincrement())
+  assemblyId       Int             @unique
+  content          String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  assembly         Assembly        @relation("AssemblyMinuteAssembly", fields: [assemblyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  // PROVISIONAL OD-03 H1-B: nullable canonical document
+  // only local reuse prevention.
+  documentRecordId Int?            @unique
+  documentRecord   DocumentRecord? @relation("AssemblyMinuteDocument", fields: [documentRecordId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+}
+
+model AssemblyResolution {
+  id         Int       @id @default(autoincrement())
+  assemblyId Int
+  title      String
+  content    String
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  assembly   Assembly  @relation(fields: [assemblyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  expenses   Expense[]
+
+  @@index([assemblyId])
+}
+
+model Event {
+  id                Int               @id @default(autoincrement())
+  publicId          String            @unique @default(uuid())
+  title             String
+  summary           String
+  description       String?
+  startAt           DateTime
+  endAt             DateTime?
+  location          String?
+  status            EventStatus       @default(SCHEDULED)
+  publicationStatus PublicationStatus @default(DRAFT)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  reservations      Reservation[]
+  initiativeId      Int?              @map("initiative_id")
+  initiative        Initiative?       @relation(fields: [initiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  revisions         EventRevision[]
+  budgetLines       EventBudgetLine[]
+
+  @@index([initiativeId])
+  @@index([publicationStatus, startAt])
+  @@index([startAt])
+}
+
+model ReservableResource {
+  id               Int                      @id @default(autoincrement())
+  name             String
+  description      String?
+  location         String?
+  capacity         Int?
+  status           ReservableResourceStatus @default(ACTIVE)
+  price            Decimal?                 @db.Decimal(14, 2)
+  currency         String                   @default("CRC")
+  pricingType      ResourcePricingType      @default(FREE)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  reservations     Reservation[]
+  facilityId       Int?                     @map("facility_id")
+  facility         InstitutionalFacility?   @relation(fields: [facilityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  unavailabilities ResourceUnavailability[]
+
+  @@index([facilityId])
+  @@index([status])
+}
+
+model Reservation {
+  id                 Int                @id @default(autoincrement())
+  startAt            DateTime
+  endAt              DateTime
+  purpose            String
+  estimatedAttendees Int?
+  notes              String?
+  status             ReservationStatus  @default(PENDING)
+  approvedAt         DateTime?
+  rejectionReason    String?
+  cancelledAt        DateTime?
+  resourceId         Int
+  requesterUserId    Int
+  approvedById       Int?
+  eventId            Int?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  resource           ReservableResource @relation(fields: [resourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  requester          User               @relation("ReservationRequester", fields: [requesterUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  approvedBy         User?              @relation("ReservationApprover", fields: [approvedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  event              Event?             @relation(fields: [eventId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  financialCharge    FinancialCharge?
+
+  @@index([requesterUserId])
+  @@index([eventId])
+  @@index([status])
+  @@index([resourceId, startAt, endAt])
+}
+
+model FinancialAccount {
+  id          Int                 @id @default(autoincrement())
+  code        String              @unique
+  name        String
+  description String?
+  currency    String              @default("CRC")
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  movements   FinancialMovement[]
+}
+
+model FinancialCharge {
+  id            Int                   @id @default(autoincrement())
+  reservationId Int                   @unique
+  amount        Decimal               @db.Decimal(14, 2)
+  currency      String                @default("CRC")
+  status        FinancialChargeStatus @default(PENDING)
+  dueAt         DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  reservation   Reservation           @relation(fields: [reservationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  payments      Payment[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Payment {
+  id              Int                @id @default(autoincrement())
+  chargeId        Int
+  movementId      Int?               @unique
+  amount          Decimal            @db.Decimal(14, 2)
+  status          PaymentStatus      @default(PENDING)
+  legacyMethod    PaymentMethod      @map("method")
+  financialMethod FinancialMethod?
+  reference       String?
+  paidAt          DateTime?
+  recordedById    Int?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  charge          FinancialCharge    @relation(fields: [chargeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  movement        FinancialMovement? @relation(fields: [movementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  recordedBy      User?              @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([chargeId])
+  @@index([status])
+  @@index([recordedById])
+  @@index([createdAt])
+}
+
+model FinancialMovement {
+  id                 Int                          @id @default(autoincrement())
+  accountId          Int?
+  type               FinancialMovementType
+  legacySource       FinancialMovementSource      @default(MANUAL) @map("source")
+  legacySourceId     Int?                         @map("sourceId")
+  originType         FinancialMovementOriginType?
+  amount             Decimal                      @db.Decimal(14, 2)
+  currency           String                       @default("CRC")
+  description        String
+  reference          String?
+  occurredAt         DateTime
+  recordedById       Int?
+  status             FinancialMovementStatus?
+  reversalOfId       Int?                         @unique
+  voidedAt           DateTime?
+  voidedById         Int?
+  voidReason         String?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+  account            FinancialAccount?            @relation(fields: [accountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  recordedBy         User?                        @relation("FinancialMovementRecorder", fields: [recordedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  voidedBy           User?                        @relation("FinancialMovementVoider", fields: [voidedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  reversalOf         FinancialMovement?           @relation("FinancialMovementReversal", fields: [reversalOfId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reversal           FinancialMovement?           @relation("FinancialMovementReversal")
+  payment            Payment?
+  originalDonation   Donation?                    @relation("DonationOriginalMovement")
+  disbursement       Disbursement?
+  fundingAllocations FundingAllocation[]
+  initiativeId       Int?                         @map("initiative_id")
+  destinationType    String?                      @map("destination_type") @db.VarChar(32)
+  initiative         Initiative?                  @relation(fields: [initiativeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([initiativeId])
+  @@index([accountId])
+  @@index([occurredAt])
+  @@index([type, occurredAt])
+  @@index([legacySource, legacySourceId], map: "FinancialMovement_source_sourceId_idx")
+  @@index([recordedById])
+  @@index([status, occurredAt])
+}
+
+model Donation {
+  id                       Int                @id @default(autoincrement())
+  donorPersonId            Int?
+  donorName                String?
+  donorIdentification      String?
+  amount                   Decimal            @db.Decimal(14, 2)
+  currency                 String             @default("CRC")
+  legacyMethod             DonationMethod     @map("method")
+  financialMethod          FinancialMethod?
+  reference                String?
+  description              String?
+  receivedAt               DateTime
+  status                   DonationStatus     @default(CONFIRMED)
+  recordedById             Int
+  cancelledById            Int?
+  cancelledAt              DateTime?
+  cancellationReason       String?
+  originalMovementId       Int?               @unique
+  legacyReversalMovementId Int?               @unique @map("reversalMovementId")
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  donorPerson              Person?            @relation(fields: [donorPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  recordedBy               User               @relation("DonationRecorder", fields: [recordedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  cancelledBy              User?              @relation("DonationCanceller", fields: [cancelledById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  originalMovement         FinancialMovement? @relation("DonationOriginalMovement", fields: [originalMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  donorId                  Int?               @map("donor_id")
+  donor                    Donor?             @relation(fields: [donorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([donorId])
+  @@index([donorPersonId])
+  @@index([status])
+  @@index([legacyMethod], map: "Donation_method_idx")
+  @@index([receivedAt])
+  @@index([recordedById])
+  @@index([cancelledById])
+  @@index([status, receivedAt])
+}
+
+model Expense {
+  id                          Int                   @id @default(autoincrement())
+  description                 String
+  amount                      Decimal               @db.Decimal(14, 2)
+  currency                    String                @default("CRC")
+  incurredAt                  DateTime
+  status                      ExpenseStatus         @default(PENDING)
+  authorizationResolutionId   Int?
+  createdAt                   DateTime              @default(now())
+  updatedAt                   DateTime              @updatedAt
+  authorizationResolution     AssemblyResolution?   @relation(fields: [authorizationResolutionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  documents                   ExpenseDocument[]
+  disbursements               Disbursement[]
+  fundingAllocations          FundingAllocation[]
+  maintenanceWorkOrderId      Int?                  @map("maintenance_work_order_id")
+  boardResolutionId           Int?                  @map("board_resolution_id")
+  expenseType                 ExpenseType           @default(OPERATING) @map("expense_type")
+  maintenanceCostRecognizedAt DateTime?             @map("maintenance_cost_recognized_at") @db.Timestamp(3)
+  maintenanceWorkOrder        MaintenanceWorkOrder? @relation(fields: [maintenanceWorkOrderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  boardResolution             BoardResolution?      @relation(fields: [boardResolutionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([maintenanceWorkOrderId])
+  @@index([boardResolutionId])
+  @@index([authorizationResolutionId])
+  @@index([status, incurredAt])
+}
+
+model ExpenseDocument {
+  id                Int                  @id @default(autoincrement())
+  expenseId         Int
+  originalName      String
+  mimeType          String
+  size              Int
+  url               String
+  createdAt         DateTime             @default(now())
+  expense           Expense              @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  documentVersionId Int?                 @map("document_version_id")
+  documentVersion   DocumentVersion?     @relation(fields: [documentVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  logs              ExpenseDocumentLog[]
+
+  @@index([documentVersionId])
+  @@index([expenseId])
+}
+
+model Disbursement {
+  id              Int                 @id @default(autoincrement())
+  expenseId       Int
+  movementId      Int                 @unique
+  amount          Decimal             @db.Decimal(14, 2)
+  currency        String              @default("CRC")
+  method          FinancialMethod
+  reference       String?
+  paidAt          DateTime
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  expense         Expense             @relation(fields: [expenseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  movement        FinancialMovement   @relation(fields: [movementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  purpose         DisbursementPurpose @default(REGULAR)
+  settledAt       DateTime?           @map("settled_at") @db.Timestamp(3)
+  settledByUserId Int?                @map("settled_by_user_id")
+  settledByUser   User?               @relation("DisbursementSettler", fields: [settledByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([settledByUserId])
+  @@index([expenseId])
+}
+
+model FundingAllocation {
+  id               Int                @id @default(autoincrement())
+  expenseId        Int
+  sourceType       FundingSourceType
+  amount           Decimal            @db.Decimal(14, 2)
+  incomeMovementId Int?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  expense          Expense            @relation(fields: [expenseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  incomeMovement   FinancialMovement? @relation(fields: [incomeMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([expenseId])
+  @@index([incomeMovementId])
+}
+
+model InventoryCategory {
+  id          Int             @id @default(autoincrement())
+  name        String          @unique
+  description String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  items       InventoryItem[]
+
+  @@index([isActive])
+}
+
+model InventoryItem {
+  id                 Int                         @id @default(autoincrement())
+  code               String                      @unique
+  name               String
+  description        String?
+  currentQuantity    Int                         @default(0)
+  minimumQuantity    Int                         @default(0)
+  unit               String                      @default("unidad")
+  location           String?
+  status             InventoryItemStatus         @default(ACTIVE)
+  condition          InventoryItemCondition      @default(GOOD)
+  categoryId         Int
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
+  category           InventoryCategory           @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  movements          InventoryMovement[]
+  loans              InventoryLoan[]
+  stockLots          InventoryStockLot[]
+  units              InventoryUnit[]
+  inKindReceiptLines InKindDonationReceiptLine[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([condition])
+}
+
+model InventoryMovement {
+  id                  Int                               @id @default(autoincrement())
+  type                InventoryMovementType
+  legacyQuantity      Int                               @map("quantity")
+  quantityDelta       Int?
+  reason              String
+  reference           String?
+  notes               String?
+  itemId              Int
+  createdById         Int?
+  createdAt           DateTime                          @default(now())
+  item                InventoryItem                     @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy           User?                             @relation(fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  checkoutLoans       InventoryLoan[]                   @relation("LoanCheckoutMovement")
+  returnLoans         InventoryLoan[]                   @relation("LoanReturnMovement")
+  cancellationLoans   InventoryLoan[]                   @relation("LoanCancellationMovement")
+  checkoutAllocations InventoryLoanCheckoutAllocation[] @relation("CheckoutAllocationMovement")
+  returnDetails       InventoryLoanReturnDetail[]       @relation("ReturnDetailMovement")
+
+  @@index([itemId])
+  @@index([type])
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model InventoryLoan {
+  id                     Int                               @id @default(autoincrement())
+  quantity               Int
+  borrowerNameSnapshot   String                            @map("borrowerName")
+  loanDate               DateTime                          @default(now())
+  expectedReturnDate     DateTime
+  returnedAt             DateTime?
+  status                 InventoryLoanStatus               @default(ACTIVE)
+  notes                  String?
+  itemId                 Int
+  borrowerAffiliateId    Int?
+  createdById            Int?
+  receivedById           Int?
+  cancelledById          Int?
+  cancelledAt            DateTime?
+  cancellationReason     String?
+  checkoutMovementId     Int?                              @unique
+  returnMovementId       Int?                              @unique
+  cancellationMovementId Int?                              @unique
+  createdAt              DateTime                          @default(now())
+  updatedAt              DateTime                          @updatedAt
+  item                   InventoryItem                     @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  borrowerAffiliate      Affiliate?                        @relation(fields: [borrowerAffiliateId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy              User?                             @relation("LoanCreator", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  receivedBy             User?                             @relation("LoanReceiver", fields: [receivedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  cancelledBy            User?                             @relation("LoanCanceller", fields: [cancelledById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  checkoutMovement       InventoryMovement?                @relation("LoanCheckoutMovement", fields: [checkoutMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  returnMovement         InventoryMovement?                @relation("LoanReturnMovement", fields: [returnMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  cancellationMovement   InventoryMovement?                @relation("LoanCancellationMovement", fields: [cancellationMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  checkoutAllocations    InventoryLoanCheckoutAllocation[]
+  returns                InventoryLoanReturn[]
+
+  @@index([itemId])
+  @@index([status])
+  @@index([borrowerAffiliateId])
+  @@index([createdById])
+  @@index([cancelledById])
+  @@index([expectedReturnDate])
+}
+
+model VolunteerOpportunity {
+  id                  Int                        @id @default(autoincrement())
+  title               String
+  description         String?
+  location            String?
+  capacity            Int?
+  applicationDeadline DateTime?
+  status              VolunteerOpportunityStatus @default(DRAFT)
+  createdByUserId     Int
+  publishedAt         DateTime?
+  closedAt            DateTime?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  cancellationReason  String?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  createdBy           User                       @relation(fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sessions            VolunteerSession[]
+  applications        VolunteerApplication[]
+  participations      VolunteerParticipation[]
+  initiativeId        Int?                       @map("initiative_id")
+  initiative          Initiative?                @relation(fields: [initiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([initiativeId])
+  @@index([createdByUserId])
+  @@index([status, applicationDeadline])
+}
+
+model VolunteerSession {
+  id                 Int                    @id @default(autoincrement())
+  opportunityId      Int
+  title              String?
+  description        String?
+  location           String?
+  startAt            DateTime
+  endAt              DateTime
+  status             VolunteerSessionStatus @default(SCHEDULED)
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  opportunity        VolunteerOpportunity   @relation(fields: [opportunityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  attendances        VolunteerAttendance[]
+
+  @@index([opportunityId, startAt])
+}
+
+model VolunteerApplication {
+  id                                Int                        @id @default(autoincrement())
+  opportunityId                     Int
+  personId                          Int?
+  submittedFullName                 String
+  submittedIdentificationType       IdentificationType?
+  submittedIdentification           String?
+  submittedNormalizedIdentification String?
+  submittedEmail                    String?
+  submittedPhone                    String?
+  motivation                        String?
+  status                            VolunteerApplicationStatus @default(PENDING)
+  requestedAt                       DateTime                   @default(now())
+  reviewedByUserId                  Int?
+  reviewedAt                        DateTime?
+  rejectionReason                   String?
+  withdrawnAt                       DateTime?
+  createdAt                         DateTime                   @default(now())
+  updatedAt                         DateTime                   @updatedAt
+  opportunity                       VolunteerOpportunity       @relation(fields: [opportunityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  person                            Person?                    @relation(fields: [personId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  reviewedBy                        User?                      @relation("VolunteerApplicationReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  participation                     VolunteerParticipation?
+
+  @@index([opportunityId, status])
+  @@index([personId, status])
+  @@index([submittedNormalizedIdentification])
+  @@index([reviewedByUserId])
+}
+
+model VolunteerParticipation {
+  id                 Int                          @id @default(autoincrement())
+  opportunityId      Int
+  personId           Int
+  applicationId      Int                          @unique
+  status             VolunteerParticipationStatus @default(CONFIRMED)
+  confirmedAt        DateTime                     @default(now())
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+  opportunity        VolunteerOpportunity         @relation(fields: [opportunityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  person             Person                       @relation(fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  application        VolunteerApplication         @relation(fields: [applicationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  attendances        VolunteerAttendance[]
+
+  @@unique([opportunityId, personId])
+  @@index([personId, status])
+  @@index([opportunityId, status])
+}
+
+model VolunteerAttendance {
+  id               Int                       @id @default(autoincrement())
+  participationId  Int
+  sessionId        Int
+  status           VolunteerAttendanceStatus
+  checkInAt        DateTime?
+  checkOutAt       DateTime?
+  creditedHours    Decimal                   @default(0) @db.Decimal(8, 2)
+  notes            String?
+  recordedByUserId Int
+  recordedAt       DateTime                  @default(now())
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  participation    VolunteerParticipation    @relation(fields: [participationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  session          VolunteerSession          @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  recordedBy       User                      @relation(fields: [recordedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([participationId, sessionId])
+  @@index([sessionId, status])
+  @@index([recordedByUserId])
+}
+
+model Venture {
+  id                Int                      @id @default(autoincrement())
+  name              String
+  description       String?
+  offerDescription  String?
+  businessPhone     String?
+  businessEmail     String?
+  websiteUrl        String?
+  socialUrl         String?
+  locationText      String?
+  status            VentureStatus            @default(ACTIVE)
+  publicationStatus VenturePublicationStatus @default(UNPUBLISHED)
+  incorporatedAt    DateTime
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  associations      VentureAssociation[]
+  requests          VentureRequest[]
+
+  @@index([status, publicationStatus])
+}
+
+model VentureAssociation {
+  id        Int       @id @default(autoincrement())
+  personId  Int
+  ventureId Int
+  startedAt DateTime
+  endedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  person    Person    @relation(fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  venture   Venture   @relation(fields: [ventureId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([personId])
+  @@index([ventureId])
+}
+
+model VentureRequest {
+  id                 Int                      @id @default(autoincrement())
+  purpose            VentureRequestPurpose
+  status             VentureRequestStatus     @default(SUBMITTED)
+  reconciledPersonId Int?
+  ventureId          Int?
+  resolvedAt         DateTime?
+  decisionReason     String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  reconciledPerson   Person?                  @relation(fields: [reconciledPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  venture            Venture?                 @relation(fields: [ventureId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  revisions          VentureRequestRevision[]
+
+  @@index([reconciledPersonId])
+  @@index([ventureId])
+  @@index([status, createdAt])
+}
+
+model VentureRequestRevision {
+  id             Int            @id @default(autoincrement())
+  requestId      Int
+  revisionNumber Int
+  payloadVersion Int
+  submittedData  Json
+  submittedAt    DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  request        VentureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([requestId, revisionNumber])
+}
+
+model IdentityReconciliationManifest {
+  id                         Int                 @id @default(autoincrement())
+  manifestVersion            String
+  normalizationVersion       String
+  decisionVersion            String
+  sourceModel                String
+  sourceId                   Int
+  sourceFingerprint          String
+  rawIdentification          String?
+  identificationType         IdentificationType?
+  normalizedIdentification   String?
+  identityClusterKey         String?
+  classification             String
+  selectedPersonId           Int?
+  personCreationAllowed      Boolean
+  conflictCodes              Json
+  nameReconciliationRequired Boolean
+  reviewRequired             Boolean
+  sourceSnapshot             Json
+  reviewedAt                 DateTime?
+  reviewedBy                 String?
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  selectedPerson             Person?             @relation("ManifestSelectedPerson", fields: [selectedPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([normalizationVersion, decisionVersion, sourceModel, sourceId])
+  @@index([identityClusterKey])
+  @@index([sourceModel, sourceId])
+  @@index([classification, reviewRequired])
+  @@index([selectedPersonId])
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum AffiliateStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum IdentificationType {
+  NATIONAL
+  DIMEX
+}
+
+enum GovernanceTermStatus {
+  PLANNED
+  ACTIVE
+  CLOSED
+  CANCELLED
+}
+
+enum AssemblyType {
+  ORDINARY
+  EXTRAORDINARY
+}
+
+enum AssemblyStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AssemblyQuorumType {
+  FIXED
+  PERCENTAGE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  JUSTIFIED
+}
+
+enum JustificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SanctionStatus {
+  ACTIVE
+  RESOLVED
+  REVOKED
+}
+
+enum EventStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum PublicationStatus {
+  INTERNAL
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReservableResourceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ResourcePricingType {
+  FREE
+  FIXED
+}
+
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  CONFIRMED
+  COMPLETED
+}
+
+enum FinancialChargeStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  SINPE_MOVIL
+  OTHER
+}
+
+enum DonationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum DonationMethod {
+  CASH
+  BANK_TRANSFER
+  SINPE_MOVIL
+  OTHER
+}
+
+enum FinancialMethod {
+  CASH
+  BANK_TRANSFER
+  SINPE_MOVIL
+  CHECK
+  OTHER
+}
+
+enum FinancialMovementType {
+  INCOME
+  EXPENSE
+}
+
+enum FinancialMovementSource {
+  MANUAL
+  RESERVATION_PAYMENT
+  DONATION
+}
+
+enum FinancialMovementOriginType {
+  MANUAL
+  PAYMENT
+  DONATION
+  DISBURSEMENT
+}
+
+enum FinancialMovementStatus {
+  POSTED
+  VOIDED
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum FundingSourceType {
+  FONDO_POR_GIRAR
+  IMPUESTO_CEMENTO
+  OWN_FUNDS
+  OTHER
+}
+
+enum InventoryItemStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InventoryItemCondition {
+  GOOD
+  DAMAGED
+  UNDER_REPAIR
+}
+
+enum InventoryMovementType {
+  OPENING_BALANCE
+  ENTRY
+  EXIT
+  ADJUSTMENT
+}
+
+enum InventoryLoanStatus {
+  ACTIVE
+  RETURNED
+  CANCELLED
+}
+
+enum InstitutionalOrganizationType {
+  INTEGRAL
+  SPECIFIC
+}
+
+enum BoardPosition {
+  PRESIDENT
+  VICE_PRESIDENT
+  SECRETARY
+  TREASURER
+  VOCAL
+  FISCAL
+  SUPLENTE
+}
+
+enum VolunteerOpportunityStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  COMPLETED
+  CANCELLED
+}
+
+enum VolunteerSessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum VolunteerApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum VolunteerParticipationStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum VolunteerAttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum VentureStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum VenturePublicationStatus {
+  UNPUBLISHED
+  PUBLISHED
+}
+
+enum VentureRequestPurpose {
+  REGISTRATION
+  UPDATE
+}
+
+enum VentureRequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+// Candidate V2. New status/type vocabulary stays String until policy freeze.
+// PostgreSQL-only checks, partial uniques, exclusion, triggers, and H1-B's
+// deliberately permitted cross-owner DocumentRecord reuse remain deferred.
+enum MaintenanceWorkOrderStatus {
+  DRAFT
+  AUTHORIZED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  VERIFIED
+  CLOSED
+  CANCELLED
+}
+
+enum DisbursementPurpose {
+  REGULAR
+  ADVANCE
+  SETTLEMENT
+}
+
+enum ExpenseType {
+  OPERATING
+  MAINTENANCE
+  EXTRAORDINARY
+}
+
+model BoardSession {
+  id            Int               @id @default(autoincrement()) @db.Integer
+  termId        Int               @map("term_id")
+  sessionNumber Int               @map("session_number")
+  scheduledAt   DateTime?         @map("scheduled_at") @db.Timestamp(3)
+  heldAt        DateTime?         @map("held_at") @db.Timestamp(3)
+  status        String            @db.VarChar(32)
+  notes         String?           @db.Text
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamp(3)
+  term          GovernanceTerm    @relation(fields: [termId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  minute        BoardMinute?
+  resolutions   BoardResolution[]
+
+  @@unique([termId, sessionNumber])
+  @@map("board_session")
+}
+
+model BoardMinute {
+  id               Int             @id @default(autoincrement()) @db.Integer
+  boardSessionId   Int             @map("board_session_id")
+  documentRecordId Int?            @unique @map("document_record_id")
+  legacyContent    String?         @map("legacy_content") @db.Text
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamp(3)
+  boardSession     BoardSession    @relation(fields: [boardSessionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  documentRecord   DocumentRecord? @relation("BoardMinuteDocument", fields: [documentRecordId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([boardSessionId])
+  @@map("board_minute")
+}
+
+model BoardResolution {
+  id                Int                             @id @default(autoincrement()) @db.Integer
+  boardSessionId    Int                             @map("board_session_id")
+  resolutionNumber  Int                             @map("resolution_number")
+  title             String                          @db.Text
+  content           String                          @db.Text
+  resolvedAt        DateTime?                       @map("resolved_at") @db.Timestamp(3)
+  documentRecordId  Int?                            @unique @map("document_record_id")
+  createdAt         DateTime                        @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt         DateTime                        @updatedAt @map("updated_at") @db.Timestamp(3)
+  boardSession      BoardSession                    @relation(fields: [boardSessionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  documentRecord    DocumentRecord?                 @relation("BoardResolutionDocument", fields: [documentRecordId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  expenses          Expense[]
+  inKindDecisions   InKindDonationDecision[]
+  shortageDecisions InventoryLoanShortageDecision[]
+
+  @@unique([boardSessionId, resolutionNumber])
+  @@map("board_resolution")
+}
+
+model EventRevision {
+  id                Int                   @id @default(autoincrement()) @db.Integer
+  eventId           Int                   @map("event_id")
+  revisionNumber    Int                   @map("revision_number")
+  snapshot          Json                  @db.JsonB
+  submittedByUserId Int?                  @map("submitted_by_user_id")
+  submittedAt       DateTime              @default(now()) @map("submitted_at") @db.Timestamp(3)
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt         DateTime              @updatedAt @map("updated_at") @db.Timestamp(3)
+  event             Event                 @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  submittedByUser   User?                 @relation("EventRevisionSubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  decisions         EventReviewDecision[]
+
+  @@unique([eventId, revisionNumber])
+  @@index([submittedByUserId])
+  @@map("event_revision")
+}
+
+model EventReviewDecision {
+  id              Int                  @id @default(autoincrement()) @db.Integer
+  eventRevisionId Int                  @map("event_revision_id")
+  membershipId    Int                  @map("membership_id")
+  decidedByUserId Int?                 @map("decided_by_user_id")
+  commandKey      String               @unique @map("command_key") @db.VarChar(128)
+  result          String               @db.VarChar(32)
+  reason          String?              @db.Text
+  decidedAt       DateTime             @map("decided_at") @db.Timestamp(3)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamp(3)
+  eventRevision   EventRevision        @relation(fields: [eventRevisionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  membership      GovernanceMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  decidedByUser   User?                @relation("EventReviewDecisionActor", fields: [decidedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([eventRevisionId])
+  @@index([membershipId])
+  @@index([decidedByUserId])
+  @@map("event_review_decision")
+}
+
+model EventBudgetLine {
+  id         Int      @id @default(autoincrement()) @db.Integer
+  eventId    Int      @map("event_id")
+  lineNumber Int      @map("line_number")
+  concept    String   @db.Text
+  amount     Decimal  @db.Decimal(14, 2)
+  currency   String   @default("CRC") @db.Char(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([eventId, lineNumber])
+  @@map("event_budget_line")
+}
+
+model Donor {
+  id                       Int              @id @default(autoincrement()) @db.Integer
+  donorType                String           @map("donor_type") @db.VarChar(16)
+  personId                 Int?             @unique @map("person_id")
+  legalName                String?          @map("legal_name") @db.VarChar(300)
+  identificationType       String           @map("identification_type") @db.VarChar(32)
+  normalizedIdentification String           @map("normalized_identification") @db.VarChar(128)
+  displayName              String           @map("display_name") @db.VarChar(300)
+  verifiedAt               DateTime?        @map("verified_at") @db.Timestamp(3)
+  verificationNote         String?          @map("verification_note") @db.Text
+  createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt                DateTime         @updatedAt @map("updated_at") @db.Timestamp(3)
+  archivedAt               DateTime?        @map("archived_at") @db.Timestamp(3)
+  person                   Person?          @relation(fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  donations                Donation[]
+  inKindDonations          InKindDonation[]
+
+  @@map("donor")
+}
+
+model InKindDonation {
+  id               Int                      @id @default(autoincrement()) @db.Integer
+  donorId          Int?                     @map("donor_id")
+  recordedByUserId Int?                     @map("recorded_by_user_id")
+  status           String                   @db.VarChar(32)
+  description      String?                  @db.Text
+  offeredAt        DateTime?                @map("offered_at") @db.Timestamp(3)
+  submittedAt      DateTime?                @map("submitted_at") @db.Timestamp(3)
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt        DateTime                 @updatedAt @map("updated_at") @db.Timestamp(3)
+  donor            Donor?                   @relation(fields: [donorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  recordedByUser   User?                    @relation("InKindDonationRecorder", fields: [recordedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  items            InKindDonationItem[]
+  decisions        InKindDonationDecision[]
+  receipts         InKindDonationReceipt[]
+
+  @@index([donorId])
+  @@index([recordedByUserId])
+  @@map("in_kind_donation")
+}
+
+model InKindDonationItem {
+  id           Int                         @id @default(autoincrement()) @db.Integer
+  donationId   Int                         @map("donation_id")
+  lineNumber   Int                         @map("line_number")
+  description  String                      @db.Text
+  quantity     Decimal                     @db.Decimal(14, 3)
+  unit         String                      @db.VarChar(32)
+  createdAt    DateTime                    @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt    DateTime                    @updatedAt @map("updated_at") @db.Timestamp(3)
+  donation     InKindDonation              @relation(fields: [donationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  receiptLines InKindDonationReceiptLine[]
+
+  @@unique([donationId, lineNumber])
+  @@map("in_kind_donation_item")
+}
+
+model InKindDonationDecision {
+  id                Int                  @id @default(autoincrement()) @db.Integer
+  donationId        Int                  @map("donation_id")
+  membershipId      Int                  @map("membership_id")
+  boardResolutionId Int?                 @map("board_resolution_id")
+  decidedByUserId   Int?                 @map("decided_by_user_id")
+  commandKey        String               @unique @map("command_key") @db.VarChar(128)
+  result            String               @db.VarChar(32)
+  decidedAt         DateTime             @map("decided_at") @db.Timestamp(3)
+  reason            String?              @db.Text
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamp(3)
+  donation          InKindDonation       @relation(fields: [donationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  membership        GovernanceMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  boardResolution   BoardResolution?     @relation(fields: [boardResolutionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  decidedByUser     User?                @relation("InKindDecisionActor", fields: [decidedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([donationId])
+  @@index([membershipId])
+  @@index([boardResolutionId])
+  @@index([decidedByUserId])
+  @@map("in_kind_donation_decision")
+}
+
+model InKindDonationReceipt {
+  id               Int                         @id @default(autoincrement()) @db.Integer
+  donationId       Int                         @map("donation_id")
+  receiptNumber    Int                         @map("receipt_number")
+  receivedByUserId Int                         @map("received_by_user_id")
+  receivedAt       DateTime                    @map("received_at") @db.Timestamp(3)
+  status           String                      @db.VarChar(32)
+  documentRecordId Int?                        @unique @map("document_record_id")
+  createdAt        DateTime                    @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt        DateTime                    @updatedAt @map("updated_at") @db.Timestamp(3)
+  donation         InKindDonation              @relation(fields: [donationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  receivedByUser   User                        @relation("InKindReceiptReceiver", fields: [receivedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  documentRecord   DocumentRecord?             @relation("InKindReceiptDocument", fields: [documentRecordId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  lines            InKindDonationReceiptLine[]
+
+  @@unique([donationId, receiptNumber])
+  @@index([receivedByUserId])
+  @@map("in_kind_donation_receipt")
+}
+
+model InKindDonationReceiptLine {
+  id             Int                              @id @default(autoincrement()) @db.Integer
+  receiptId      Int                              @map("receipt_id")
+  lineNumber     Int                              @map("line_number")
+  donationItemId Int                              @map("donation_item_id")
+  itemId         Int                              @map("item_id")
+  quantity       Decimal                          @db.Decimal(14, 3)
+  condition      String                           @db.VarChar(32)
+  createdAt      DateTime                         @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt      DateTime                         @updatedAt @map("updated_at") @db.Timestamp(3)
+  receipt        InKindDonationReceipt            @relation(fields: [receiptId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  donationItem   InKindDonationItem               @relation(fields: [donationItemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  item           InventoryItem                    @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  lotOrigins     InventoryStockLotReceiptOrigin[]
+  unitOrigins    InventoryUnitReceiptOrigin[]
+
+  @@unique([receiptId, lineNumber])
+  @@index([donationItemId])
+  @@index([itemId])
+  @@map("in_kind_donation_receipt_line")
+}
+
+model InstitutionalFacility {
+  id                    Int                     @id @default(autoincrement()) @db.Integer
+  code                  String                  @unique @db.VarChar(64)
+  name                  String                  @db.VarChar(200)
+  description           String?                 @db.Text
+  parentFacilityId      Int?                    @map("parent_facility_id")
+  status                String                  @db.VarChar(32)
+  location              String?                 @db.Text
+  createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt             DateTime                @updatedAt @map("updated_at") @db.Timestamp(3)
+  parentFacility        InstitutionalFacility?  @relation("FacilityHierarchy", fields: [parentFacilityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  children              InstitutionalFacility[] @relation("FacilityHierarchy")
+  reservableResources   ReservableResource[]
+  maintenanceIncidents  MaintenanceIncident[]
+  maintenanceWorkOrders MaintenanceWorkOrder[]
+
+  @@index([parentFacilityId])
+  @@map("institutional_facility")
+}
+
+model InventoryStockLot {
+  id                    Int                               @id @default(autoincrement()) @db.Integer
+  code                  String                            @unique @db.VarChar(64)
+  itemId                Int                               @map("item_id")
+  quantity              Decimal                           @db.Decimal(14, 3)
+  condition             String                            @db.VarChar(32)
+  status                String                            @db.VarChar(32)
+  notes                 String?                           @db.Text
+  createdAt             DateTime                          @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt             DateTime                          @updatedAt @map("updated_at") @db.Timestamp(3)
+  item                  InventoryItem                     @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  origin                InventoryStockLotReceiptOrigin?
+  maintenanceIncidents  MaintenanceIncident[]
+  maintenanceWorkOrders MaintenanceWorkOrder[]
+  checkoutAllocations   InventoryLoanCheckoutAllocation[]
+
+  @@index([itemId])
+  @@map("inventory_stock_lot")
+}
+
+model InventoryUnit {
+  id                    Int                               @id @default(autoincrement()) @db.Integer
+  assetCode             String                            @unique @map("asset_code") @db.VarChar(64)
+  itemId                Int                               @map("item_id")
+  condition             String                            @db.VarChar(32)
+  status                String                            @db.VarChar(32)
+  serialNumber          String?                           @map("serial_number") @db.VarChar(128)
+  notes                 String?                           @db.Text
+  createdAt             DateTime                          @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt             DateTime                          @updatedAt @map("updated_at") @db.Timestamp(3)
+  item                  InventoryItem                     @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  origin                InventoryUnitReceiptOrigin?
+  maintenanceIncidents  MaintenanceIncident[]
+  maintenanceWorkOrders MaintenanceWorkOrder[]
+  checkoutAllocations   InventoryLoanCheckoutAllocation[]
+
+  @@index([itemId])
+  @@map("inventory_unit")
+}
+
+model MaintenanceIncident {
+  id                 Int                      @id @default(autoincrement()) @db.Integer
+  facilityId         Int?                     @map("facility_id")
+  stockLotId         Int?                     @map("stock_lot_id")
+  unitId             Int?                     @map("unit_id")
+  reportedByPersonId Int?                     @map("reported_by_person_id")
+  status             String                   @db.VarChar(32)
+  description        String                   @db.Text
+  reportedAt         DateTime                 @default(now()) @map("reported_at") @db.Timestamp(3)
+  createdAt          DateTime                 @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt          DateTime                 @updatedAt @map("updated_at") @db.Timestamp(3)
+  facility           InstitutionalFacility?   @relation(fields: [facilityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  stockLot           InventoryStockLot?       @relation(fields: [stockLotId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  unit               InventoryUnit?           @relation(fields: [unitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reportedByPerson   Person?                  @relation("IncidentReporter", fields: [reportedByPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  workOrders         MaintenanceWorkOrder[]
+  unavailabilities   ResourceUnavailability[]
+
+  @@index([facilityId])
+  @@index([stockLotId])
+  @@index([unitId])
+  @@index([reportedByPersonId])
+  @@map("maintenance_incident")
+}
+
+model MaintenanceWorkOrder {
+  id                   Int                        @id @default(autoincrement()) @db.Integer
+  incidentId           Int?                       @map("incident_id")
+  facilityId           Int?                       @map("facility_id")
+  stockLotId           Int?                       @map("stock_lot_id")
+  unitId               Int?                       @map("unit_id")
+  executorPersonId     Int?                       @map("executor_person_id")
+  authorizedByUserId   Int?                       @map("authorized_by_user_id")
+  initiativeId         Int?                       @map("initiative_id")
+  documentRecordId     Int?                       @unique @map("document_record_id")
+  status               MaintenanceWorkOrderStatus @default(DRAFT)
+  scope                String?                    @db.Text
+  authorizedAt         DateTime?                  @map("authorized_at") @db.Timestamp(3)
+  assignedAt           DateTime?                  @map("assigned_at") @db.Timestamp(3)
+  verifiedAt           DateTime?                  @map("verified_at") @db.Timestamp(3)
+  closedAt             DateTime?                  @map("closed_at") @db.Timestamp(3)
+  verificationEvidence Json?                      @map("verification_evidence") @db.JsonB
+  createdAt            DateTime                   @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt            DateTime                   @updatedAt @map("updated_at") @db.Timestamp(3)
+  incident             MaintenanceIncident?       @relation(fields: [incidentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  facility             InstitutionalFacility?     @relation(fields: [facilityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  stockLot             InventoryStockLot?         @relation(fields: [stockLotId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  unit                 InventoryUnit?             @relation(fields: [unitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  executorPerson       Person?                    @relation("WorkOrderExecutor", fields: [executorPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  authorizedByUser     User?                      @relation("WorkOrderAuthorizer", fields: [authorizedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  initiative           Initiative?                @relation(fields: [initiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  documentRecord       DocumentRecord?            @relation("WorkOrderDocument", fields: [documentRecordId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  expenses             Expense[]
+  unavailabilities     ResourceUnavailability[]
+
+  @@index([incidentId])
+  @@index([facilityId])
+  @@index([stockLotId])
+  @@index([unitId])
+  @@index([executorPersonId])
+  @@index([authorizedByUserId])
+  @@index([initiativeId])
+  @@map("maintenance_work_order")
+}
+
+model ResourceUnavailability {
+  id                   Int                   @id @default(autoincrement()) @db.Integer
+  reservableResourceId Int                   @map("reservable_resource_id")
+  incidentId           Int?                  @map("incident_id")
+  workOrderId          Int?                  @map("work_order_id")
+  startsAt             DateTime              @map("starts_at") @db.Timestamp(3)
+  endsAt               DateTime?             @map("ends_at") @db.Timestamp(3)
+  releasedAt           DateTime?             @map("released_at") @db.Timestamp(3)
+  releasedByUserId     Int?                  @map("released_by_user_id")
+  reason               String                @db.Text
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamp(3)
+  reservableResource   ReservableResource    @relation(fields: [reservableResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  incident             MaintenanceIncident?  @relation(fields: [incidentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  workOrder            MaintenanceWorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  releasedByUser       User?                 @relation("UnavailabilityReleaser", fields: [releasedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([incidentId])
+  @@index([workOrderId])
+  @@index([releasedByUserId])
+  @@map("resource_unavailability")
+}
+
+model Initiative {
+  events                 Event[]
+  volunteerOpportunities VolunteerOpportunity[]
+  financialMovements     FinancialMovement[]
+  maintenanceWorkOrders  MaintenanceWorkOrder[]
+  id                     Int                    @id @default(autoincrement()) @db.Integer
+  code                   String                 @unique @db.VarChar(64)
+  name                   String                 @db.VarChar(200)
+  description            String?                @db.Text
+  status                 String?                @db.VarChar(32)
+  startedAt              DateTime?              @map("started_at") @db.Date
+  createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt              DateTime               @updatedAt @map("updated_at") @db.Timestamp(3)
+
+  @@map("initiative")
+}
+
+model DocumentSeries {
+  id            Int                    @id @default(autoincrement()) @db.Integer
+  code          String                 @unique @db.VarChar(64)
+  name          String                 @db.VarChar(200)
+  description   String?                @db.Text
+  isActive      Boolean                @default(true) @map("is_active")
+  createdAt     DateTime               @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt     DateTime               @updatedAt @map("updated_at") @db.Timestamp(3)
+  retiredAt     DateTime?              @map("retired_at") @db.Timestamp(3)
+  documents     DocumentRecord[]
+  folioCounters DocumentFolioCounter[]
+
+  @@map("document_series")
+}
+
+model DocumentRecord {
+  id                             Int                    @id @default(autoincrement()) @db.Integer
+  seriesId                       Int?                   @map("series_id")
+  folioYear                      Int?                   @map("folio_year")
+  folioSequence                  Int?                   @map("folio_sequence")
+  officialRegistrationRequestKey String?                @unique @map("official_registration_request_key") @db.VarChar(128)
+  classification                 String                 @db.VarChar(16)
+  status                         String                 @db.VarChar(32)
+  officialRegisteredAt           DateTime?              @map("official_registered_at") @db.Timestamp(3)
+  voidedAt                       DateTime?              @map("voided_at") @db.Timestamp(3)
+  voidReason                     String?                @map("void_reason") @db.Text
+  title                          String?                @db.VarChar(300)
+  createdAt                      DateTime               @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt                      DateTime               @updatedAt @map("updated_at") @db.Timestamp(3)
+  series                         DocumentSeries?        @relation(fields: [seriesId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  versions                       DocumentVersion[]
+  correspondence                 Correspondence?
+  assemblyMinute                 AssemblyMinute?        @relation("AssemblyMinuteDocument")
+  boardMinute                    BoardMinute?           @relation("BoardMinuteDocument")
+  boardResolution                BoardResolution?       @relation("BoardResolutionDocument")
+  inKindReceipt                  InKindDonationReceipt? @relation("InKindReceiptDocument")
+  maintenanceWorkOrder           MaintenanceWorkOrder?  @relation("WorkOrderDocument")
+
+  @@unique([seriesId, folioYear, folioSequence])
+  @@map("document_record")
+}
+
+model DocumentVersion {
+  id                 Int               @id @default(autoincrement()) @db.Integer
+  documentId         Int               @map("document_id")
+  versionNumber      Int               @map("version_number")
+  storageKey         String            @map("storage_key") @db.VarChar(500)
+  originalName       String            @map("original_name") @db.VarChar(255)
+  mimeType           String            @map("mime_type") @db.VarChar(127)
+  sizeBytes          Int               @map("size_bytes")
+  checksumSha256     String            @map("checksum_sha256") @db.Char(64)
+  createdByUserId    Int?              @map("created_by_user_id")
+  rectifiesVersionId Int?              @map("rectifies_version_id")
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamp(3)
+  document           DocumentRecord    @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdByUser      User?             @relation("DocumentVersionCreator", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  rectifiesVersion   DocumentVersion?  @relation("DocumentRectification", fields: [rectifiesVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rectifiedBy        DocumentVersion[] @relation("DocumentRectification")
+  expenseDocuments   ExpenseDocument[]
+
+  @@unique([documentId, versionNumber])
+  @@index([createdByUserId])
+  @@index([rectifiesVersionId])
+  @@map("document_version")
+}
+
+model InventoryLoanCheckoutAllocation {
+  id                 Int                         @id @default(autoincrement()) @db.Integer
+  loanId             Int                         @map("loan_id")
+  lotId              Int?                        @map("lot_id")
+  unitId             Int?                        @map("unit_id")
+  quantity           Decimal                     @db.Decimal(14, 3)
+  checkoutMovementId Int?                        @unique @map("checkout_movement_id")
+  createdAt          DateTime                    @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt          DateTime                    @updatedAt @map("updated_at") @db.Timestamp(3)
+  notes              String?                     @db.Text
+  loan               InventoryLoan               @relation(fields: [loanId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  lot                InventoryStockLot?          @relation(fields: [lotId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  unit               InventoryUnit?              @relation(fields: [unitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  checkoutMovement   InventoryMovement?          @relation("CheckoutAllocationMovement", fields: [checkoutMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  returnDetails      InventoryLoanReturnDetail[]
+  shortages          InventoryLoanShortage[]
+
+  @@index([loanId])
+  @@index([lotId])
+  @@index([unitId])
+  @@map("inventory_loan_checkout_allocation")
+}
+
+model InventoryLoanReturn {
+  id               Int                         @id @default(autoincrement()) @db.Integer
+  loanId           Int                         @map("loan_id")
+  returnNumber     Int                         @map("return_number")
+  receivedByUserId Int                         @map("received_by_user_id")
+  receivedAt       DateTime                    @map("received_at") @db.Timestamp(3)
+  status           String                      @db.VarChar(32)
+  notes            String?                     @db.Text
+  createdAt        DateTime                    @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt        DateTime                    @updatedAt @map("updated_at") @db.Timestamp(3)
+  loan             InventoryLoan               @relation(fields: [loanId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  receivedByUser   User                        @relation("LoanReturnReceiver", fields: [receivedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  details          InventoryLoanReturnDetail[]
+
+  @@unique([loanId, returnNumber])
+  @@index([receivedByUserId])
+  @@map("inventory_loan_return")
+}
+
+model InventoryLoanReturnDetail {
+  id                       Int                             @id @default(autoincrement()) @db.Integer
+  returnId                 Int                             @map("return_id")
+  checkoutAllocationId     Int                             @map("checkout_allocation_id")
+  quantity                 Decimal                         @db.Decimal(14, 3)
+  condition                String                          @db.VarChar(32)
+  availableEntryMovementId Int?                            @unique @map("available_entry_movement_id")
+  notes                    String?                         @db.Text
+  createdAt                DateTime                        @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt                DateTime                        @updatedAt @map("updated_at") @db.Timestamp(3)
+  return                   InventoryLoanReturn             @relation(fields: [returnId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  checkoutAllocation       InventoryLoanCheckoutAllocation @relation(fields: [checkoutAllocationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  availableEntryMovement   InventoryMovement?              @relation("ReturnDetailMovement", fields: [availableEntryMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([returnId, checkoutAllocationId])
+  @@index([checkoutAllocationId])
+  @@map("inventory_loan_return_detail")
+}
+
+model InventoryLoanShortage {
+  id                   Int                             @id @default(autoincrement()) @db.Integer
+  checkoutAllocationId Int                             @map("checkout_allocation_id")
+  quantity             Decimal                         @db.Decimal(14, 3)
+  status               String                          @db.VarChar(32)
+  reason               String?                         @db.Text
+  detectedAt           DateTime                        @default(now()) @map("detected_at") @db.Timestamp(3)
+  createdAt            DateTime                        @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt            DateTime                        @updatedAt @map("updated_at") @db.Timestamp(3)
+  checkoutAllocation   InventoryLoanCheckoutAllocation @relation(fields: [checkoutAllocationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  decisions            InventoryLoanShortageDecision[]
+
+  @@index([checkoutAllocationId])
+  @@map("inventory_loan_shortage")
+}
+
+model InventoryLoanShortageDecision {
+  id                Int                   @id @default(autoincrement()) @db.Integer
+  shortageId        Int                   @map("shortage_id")
+  membershipId      Int                   @map("membership_id")
+  boardResolutionId Int?                  @map("board_resolution_id")
+  decidedByUserId   Int?                  @map("decided_by_user_id")
+  commandKey        String                @unique @map("command_key") @db.VarChar(128)
+  result            String                @db.VarChar(32)
+  reason            String?               @db.Text
+  decidedAt         DateTime              @map("decided_at") @db.Timestamp(3)
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamp(3)
+  shortage          InventoryLoanShortage @relation(fields: [shortageId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  membership        GovernanceMembership  @relation(fields: [membershipId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  boardResolution   BoardResolution?      @relation(fields: [boardResolutionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  decidedByUser     User?                 @relation("ShortageDecisionActor", fields: [decidedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([shortageId])
+  @@index([membershipId])
+  @@index([boardResolutionId])
+  @@index([decidedByUserId])
+  @@map("inventory_loan_shortage_decision")
+}
+
+model ExpenseDocumentLog {
+  id                Int             @id @default(autoincrement()) @db.Integer
+  expenseDocumentId Int             @map("expense_document_id")
+  actorUserId       Int?            @map("actor_user_id")
+  eventType         String          @map("event_type") @db.VarChar(32)
+  eventAt           DateTime        @default(now()) @map("event_at") @db.Timestamp(3)
+  snapshot          Json            @db.JsonB
+  reason            String?         @db.Text
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamp(3)
+  expenseDocument   ExpenseDocument @relation(fields: [expenseDocumentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actorUser         User?           @relation("ExpenseDocumentLogActor", fields: [actorUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([expenseDocumentId])
+  @@index([actorUserId])
+  @@map("expense_document_log")
+}
+
+model Correspondence {
+  id               Int                 @id @default(autoincrement()) @db.Integer
+  documentRecordId Int                 @unique @map("document_record_id")
+  direction        String              @db.VarChar(16)
+  counterparty     String              @db.Text
+  receivedOrSentAt DateTime?           @map("received_or_sent_at") @db.Timestamp(3)
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamp(3)
+  documentRecord   DocumentRecord      @relation(fields: [documentRecordId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  logs             CorrespondenceLog[]
+
+  @@map("correspondence")
+}
+
+model CorrespondenceLog {
+  id               Int            @id @default(autoincrement()) @db.Integer
+  correspondenceId Int            @map("correspondence_id")
+  actorUserId      Int?           @map("actor_user_id")
+  eventType        String         @map("event_type") @db.VarChar(32)
+  eventAt          DateTime       @default(now()) @map("event_at") @db.Timestamp(3)
+  snapshot         Json           @db.JsonB
+  reason           String?        @db.Text
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamp(3)
+  correspondence   Correspondence @relation(fields: [correspondenceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actorUser        User?          @relation("CorrespondenceLogActor", fields: [actorUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([correspondenceId])
+  @@index([actorUserId])
+  @@map("correspondence_log")
+}
+
+model DocumentFolioCounter {
+  seriesId     Int            @map("series_id")
+  folioYear    Int            @map("folio_year")
+  lastAssigned Int            @default(0) @map("last_assigned")
+  series       DocumentSeries @relation(fields: [seriesId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([seriesId, folioYear])
+  @@map("document_folio_counter")
+}
+
+model InventoryStockLotReceiptOrigin {
+  id            Int                       @id @default(autoincrement()) @db.Integer
+  lotId         Int                       @unique @map("lot_id")
+  receiptLineId Int                       @map("receipt_line_id")
+  lot           InventoryStockLot         @relation(fields: [lotId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  receiptLine   InKindDonationReceiptLine @relation(fields: [receiptLineId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([receiptLineId])
+  @@map("inventory_stock_lot_receipt_origin")
+}
+
+model InventoryUnitReceiptOrigin {
+  id            Int                       @id @default(autoincrement()) @db.Integer
+  unitId        Int                       @unique @map("unit_id")
+  receiptLineId Int                       @map("receipt_line_id")
+  unit          InventoryUnit             @relation(fields: [unitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  receiptLine   InKindDonationReceiptLine @relation(fields: [receiptLineId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([receiptLineId])
+  @@map("inventory_unit_receipt_origin")
+}

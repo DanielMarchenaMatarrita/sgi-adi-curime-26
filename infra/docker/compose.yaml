@@ -1,0 +1,26 @@
+name: sgi-curime-v2
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: sgi_curime_v2
+      POSTGRES_USER: sgi_admin
+      POSTGRES_PASSWORD: ${SGI_DB_PASSWORD:?Define SGI_DB_PASSWORD}
+
+    ports:
+      - "127.0.0.1:5433:5432"
+
+    volumes:
+      - postgres_v2_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sgi_admin -d sgi_curime_v2"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_v2_data:

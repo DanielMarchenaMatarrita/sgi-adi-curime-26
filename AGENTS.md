@@ -16,6 +16,17 @@
 - Terra coordina el diseño; Atlas examina BD/Prisma/PostgreSQL; Forge backend; Pixel frontend; Sentinel validación cuando se requiera.
 - No abrir trabajos de frontend/backend mientras el modelo relacional V2 no esté congelado y autorizado.
 
+## Orquestación eficiente
+
+- Terra ejecuta tareas simples y de coordinación directamente.
+- Delegar a Atlas, Forge o Pixel solo cuando se requiera especialización; preferir un especialista por tarea.
+- Usar múltiples agentes solo ante dependencias reales entre dominios; evitar delegación recursiva, revisiones repetidas y handoffs innecesarios.
+- Sentinel solo para cambios de alto riesgo o solicitud explícita; no forma parte del flujo rutinario.
+- Scribe no se invoca automáticamente. Documentación solo por responsable, tras confirmación del usuario.
+- Pulse es opcional; no usar para trabajo rutinario.
+- Reutilizar análisis, checkpoints y evidencia existente. Validar de forma focal según riesgo; evitar suites completas durante desarrollo sin necesidad.
+- Reportes breves: cambios, validación, bloqueos y siguiente acción.
+
 ## Organización
 
 - `docs/architecture/decisions/`: decisiones arquitectónicas formales.

@@ -1,0 +1,29 @@
+{
+  "base_tables": 82,
+  "consolidation_tables": 4,
+  "total_tables": 86,
+  "base_columns": 887,
+  "contract_base_columns_before_roleId_removal": 888,
+  "enums": 46,
+  "baseline_fks_removed_user_role": 76,
+  "v2_ledger_fks": 81,
+  "consolidation_fks": 17,
+  "total_foreign_keys": 174,
+  "baseline_unique_indexes": 37,
+  "v2_unique_indexes": 31,
+  "explicit_baseline_and_v2_indexes": 166,
+  "named_firm_checks": 39,
+  "exclusions": 1,
+  "trigger_functions": 21,
+  "trigger_objects": 30,
+  "parsed_sql_statements": 637,
+  "runtime_postgresql_tested": false,
+  "postgres_execution_status": "PENDING_RETEST_FIX01; original migration failed on unquoted endsOn",
+  "safe_to_execute_supabase": false,
+  "index_predicate_fix": {
+    "revision": "FIX-01",
+    "corrected_predicates": 3,
+    "static_recheck": "PASS",
+    "corrected_migration_runtime_tested": false
+  }
+}

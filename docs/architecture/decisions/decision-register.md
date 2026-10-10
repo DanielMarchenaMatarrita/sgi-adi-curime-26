@@ -37,7 +37,7 @@
 
 ## Pendientes de congelamiento lógico
 
-- Finalizar PK/FK y relación exacta de anticipos liquidados a costos definitivos.
+- La relación lógica exacta de anticipos liquidados a costos definitivos queda resuelta por el contrato 9.4B: la liquidación usa el mismo `Expense.id`, moneda común, conciliación atómica, `settledAt` y `settledByUserId`, como máximo un `SETTLEMENT` residual y ninguna salida de caja duplicada. Permanecen pendientes los detalles físicos (índices, triggers y transacciones) para 9.4C.
 - Determinar si `BoardSessionAttendance` amerita tabla separada.
 - Determinar si alguna asociación documental necesita tabla específica, sin proliferación innecesaria.
 - Validar todas las cardinalidades y sus acciones referenciales antes de migrar.
