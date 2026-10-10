@@ -1,6 +1,6 @@
 # Checkpoint 9.4C-B — diccionario físico PostgreSQL
 
-**Estado:** CANDIDATO V2; diseño, no implementado ni congelado. **Corte:** 2026-10-09.  
+**Estado:** CANDIDATO V2; diseño, no implementado ni congelado. **Corte:** 2026-10-09.
 **Autoridad lógica:** [catálogo](../logical/entity-catalog.md), [relaciones](../logical/relationship-matrix.md), [restricciones](../logical/constraint-matrix.md), [normalización](../normalization/9.4C-A-review.md). La baseline se conserva desde la [revisión V1.1 fijada](../../baseline-v1.1/README.md).
 
 ## Convenciones físicas
