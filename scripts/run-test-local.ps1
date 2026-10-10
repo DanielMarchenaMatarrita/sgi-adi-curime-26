@@ -1,4 +1,4 @@
-# PowerShell 7. Run from repository root after placing this package under database/sql/v2.
+# PowerShell 7. Run from repository root after placing this package under database/sql/tests/schema.
 # Creates ONLY a new disposable DB; never drops the existing sgi_curime_v2.
 param(
   [string]$Container = 'sgi-curime-v2-postgres-1',
@@ -9,8 +9,8 @@ $ErrorActionPreference = 'Stop'
 if ($TestDatabase -notmatch '^sgi_curime_v2_ddl_test[a-z0-9_]*$') { throw 'Refusing unsafe test database name.' }
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $migration = Join-Path $root '..\supabase\migrations\20261010000000_sgi_curime_v2_initial.sql'
-$verify = Join-Path $root '..\database\sql\v2\09_verify.sql'
-$smoke = Join-Path $root '..\database\sql\v2\10_smoke_rollback.sql'
+$verify = Join-Path $root '..\database\sql\tests\schema\09_verify.sql'
+$smoke = Join-Path $root '..\database\sql\tests\schema\10_smoke_rollback.sql'
 foreach($file in @($migration,$verify,$smoke)) { if (!(Test-Path $file)) {throw "File not found: $file"} }
 $running = docker inspect --format '{{.State.Running}}' $Container
 if ($LASTEXITCODE -ne 0 -or $running -ne 'true') {throw "Postgres container not running: $Container"}

@@ -13,7 +13,7 @@ PostgreSQL convierte nombres sin comillas a minúsculas. Las columnas originales
 | `uq_venture_association_open` | `WHERE endedAt IS NULL` | `WHERE "endedAt" IS NULL` |
 
 Archivos modificados:
-- `database/sql/v2/03_indexes.sql`
+- `database/sql/schema/indexes/03_indexes.sql`
 - `supabase/migrations/20261010000000_sgi_curime_v2_initial.sql`
 
 Los dos archivos se mantienen sincronizados; no ejecutar los módulos por separado luego de ejecutar la migración integrada.
