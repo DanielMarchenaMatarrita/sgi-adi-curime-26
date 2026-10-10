@@ -21,6 +21,16 @@ BEGIN
       RAISE EXCEPTION 'role invariant failed: %', role_name;
     END IF;
   END LOOP;
+  FOREACH role_name IN ARRAY ARRAY['sgi_auth_validator', 'sgi_app_validator'] LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_roles
+      WHERE rolname = role_name AND rolcanlogin AND NOT rolinherit
+        AND NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole
+        AND NOT rolreplication AND NOT rolbypassrls
+    ) THEN
+      RAISE EXCEPTION 'validator role invariant failed: %', role_name;
+    END IF;
+  END LOOP;
   IF NOT pg_has_role('sgi_migrator', 'sgi_owner', 'member') THEN RAISE EXCEPTION 'migrator lacks owner membership'; END IF;
   IF pg_has_role('sgi_auth_runtime', 'sgi_owner', 'member') OR pg_has_role('sgi_app_runtime', 'sgi_owner', 'member') THEN
     RAISE EXCEPTION 'runtime role owns migration role';
@@ -35,6 +45,60 @@ BEGIN
   END IF;
 END $$;
 
+DO $$
+BEGIN
+  IF current_database() = 'sgi_curime_v2' OR current_database() !~ '^atlas_security_[0-9a-f]{16}$' THEN
+    RAISE EXCEPTION 'runner used non-disposable database: %', current_database();
+  END IF;
+  IF NOT has_database_privilege('postgres', current_database(), 'CONNECT')
+     OR NOT has_database_privilege('sgi_auth_validator', current_database(), 'CONNECT')
+     OR NOT has_database_privilege('sgi_app_validator', current_database(), 'CONNECT') THEN
+    RAISE EXCEPTION 'required disposable database CONNECT grant missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM pg_database database_record
+    CROSS JOIN LATERAL aclexplode(database_record.datacl) privilege
+    WHERE database_record.datname = current_database()
+      AND privilege.privilege_type = 'CONNECT'
+      AND (
+        privilege.grantee = 0
+        OR privilege.grantee NOT IN (
+          (SELECT oid FROM pg_roles WHERE rolname = 'postgres'),
+          (SELECT oid FROM pg_roles WHERE rolname = 'sgi_auth_validator'),
+          (SELECT oid FROM pg_roles WHERE rolname = 'sgi_app_validator')
+        )
+      )
+  ) THEN
+    RAISE EXCEPTION 'unexpected disposable database CONNECT grantee';
+  END IF;
+END $$;
+
+\connect - sgi_auth_validator
+SELECT test_103d_a.assert_raises('SELECT "id" FROM public."User"', '42501');
+SELECT test_103d_a.assert_raises('INSERT INTO public."AuditLog" ("action", "module", "userId") VALUES (''x'', ''test'', 1)', '42501');
+SELECT test_103d_a.assert_raises('SET ROLE sgi_app_runtime', '42501');
+SELECT test_103d_a.assert_raises('SET ROLE sgi_owner', '42501');
+SELECT test_103d_a.assert_raises('SET ROLE sgi_migrator', '42501');
+SET ROLE sgi_auth_runtime;
+DO $$ BEGIN
+  IF current_user <> 'sgi_auth_runtime' THEN RAISE EXCEPTION 'auth validator cannot SET ROLE its runtime'; END IF;
+END $$;
+RESET ROLE;
+
+\connect - sgi_app_validator
+SELECT test_103d_a.assert_raises('SELECT "id" FROM public."User"', '42501');
+SELECT test_103d_a.assert_raises('INSERT INTO public."AuditLog" ("action", "module", "userId") VALUES (''x'', ''test'', 1)', '42501');
+SELECT test_103d_a.assert_raises('SET ROLE sgi_auth_runtime', '42501');
+SELECT test_103d_a.assert_raises('SET ROLE sgi_owner', '42501');
+SELECT test_103d_a.assert_raises('SET ROLE sgi_migrator', '42501');
+SET ROLE sgi_app_runtime;
+DO $$ BEGIN
+  IF current_user <> 'sgi_app_runtime' THEN RAISE EXCEPTION 'app validator cannot SET ROLE its runtime'; END IF;
+END $$;
+RESET ROLE;
+
+\connect - postgres
 SET ROLE sgi_auth_runtime;
 DO $$ DECLARE row_count integer; BEGIN
   SELECT count(*) INTO row_count FROM public."User";

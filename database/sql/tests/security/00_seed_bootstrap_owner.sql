@@ -1,5 +1,7 @@
 -- Test fixture only. Run after canonical migration and before forced-RLS security artifact.
 -- postgres is canonical bootstrap owner here; this is not a production runtime backdoor.
+\set ON_ERROR_STOP on
+
 INSERT INTO public."Person" ("firstName", "identification", "email", "updatedAt")
 VALUES ('Ana', '1-0001-0001', 'ana@example.test', now());
 
