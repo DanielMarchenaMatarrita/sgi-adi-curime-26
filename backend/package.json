@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "prisma:generate": "prisma generate --schema ../database/prisma/schema.prisma",
+    "build": "pnpm run prisma:generate && tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "test": "jest --runInBand",
@@ -11,6 +12,7 @@
     "test:e2e": "jest --runInBand --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@prisma/client": "6.19.3",
     "@nestjs/common": "^11.2.7",
     "@nestjs/core": "^11.2.7",
     "@nestjs/platform-express": "^11.2.7",

@@ -6,7 +6,12 @@ describe('Health endpoint', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    app = await createApplication({ nodeEnv: 'test', port: 3000 });
+    app = await createApplication({
+      nodeEnv: 'test',
+      port: 3000,
+      authDatabaseUrl: 'postgresql://auth_runtime:secret@localhost:5432/sgi',
+      appDatabaseUrl: 'postgresql://app_runtime:secret@localhost:5432/sgi',
+    });
     await app.init();
   });
 
