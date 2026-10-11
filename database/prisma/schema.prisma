@@ -28,6 +28,7 @@ model Person {
   address                  String?             @db.Text
   createdAt                DateTime            @default(now()) @db.Timestamp(3)
   updatedAt                DateTime            @updatedAt @db.Timestamp(3)
+  affiliate                Affiliate?
   user                     User?
 
   @@unique([identificationType, normalizedIdentification], map: "BU01")
@@ -89,6 +90,32 @@ model User {
   auditLogs                  AuditLog[]
   passwordResetTokens        PasswordResetToken[]
   activationTokens           AccountActivationToken[]
+}
+
+model Affiliate {
+  id                       Int             @id(map: "pk_Affiliate") @default(autoincrement()) @db.Integer
+  fullName                 String          @db.Text
+  identification           String          @unique(map: "BU10") @db.Text
+  birthDate                DateTime        @db.Timestamp(3)
+  gender                   String?         @db.Text
+  phone                    String?         @db.Text
+  email                    String?         @unique(map: "BU11") @db.Text
+  address                  String          @db.Text
+  occupation               String?         @db.Text
+  workplace                String?         @db.Text
+  affiliateType            String?         @db.Text
+  affiliationDate          DateTime        @default(now()) @db.Timestamp(3)
+  status                   AffiliateStatus @default(ACTIVE)
+  identificationType       IdentificationType?
+  phoneCountryCode         String?         @db.Text
+  phoneNationalNumber      String?         @db.Text
+  personId                 Int?            @unique(map: "BU12") @db.Integer
+  roleId                   Int?            @db.Integer
+  createdAt                DateTime        @default(now()) @db.Timestamp(3)
+  updatedAt                DateTime        @updatedAt @db.Timestamp(3)
+  person                   Person?         @relation(fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_Affiliate_personId")
+
+  @@index([roleId], map: "BI017")
 }
 
 model UserRole {
@@ -169,4 +196,9 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   BLOCKED
+}
+
+enum AffiliateStatus {
+  ACTIVE
+  INACTIVE
 }

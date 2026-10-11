@@ -10,6 +10,7 @@ import { DatabaseModule } from './database/database.module';
 import { RuntimeConfig } from './config/runtime-config';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AffiliatesModule } from './modules/affiliates/affiliates.module';
 
 @Module({
 })
@@ -17,7 +18,12 @@ export class AppModule implements NestModule {
   static register(config: RuntimeConfig): DynamicModule {
     return {
       module: AppModule,
-      imports: [HealthModule, DatabaseModule.register(config), AuthModule.register(config)],
+      imports: [
+        HealthModule,
+        DatabaseModule.register(config),
+        AuthModule.register(config),
+        AffiliatesModule.register(config),
+      ],
     };
   }
 

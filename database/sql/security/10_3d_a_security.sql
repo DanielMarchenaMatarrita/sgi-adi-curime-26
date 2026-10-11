@@ -38,6 +38,7 @@ ALTER TABLE public."Session" OWNER TO sgi_owner;
 ALTER TABLE public."AuditLog" OWNER TO sgi_owner;
 ALTER TABLE public."PasswordResetToken" OWNER TO sgi_owner;
 ALTER TABLE public."AccountActivationToken" OWNER TO sgi_owner;
+ALTER TABLE public."Affiliate" OWNER TO sgi_owner;
 
 DO $$
 DECLARE seq record;
@@ -50,7 +51,7 @@ BEGIN
     JOIN pg_class t ON t.oid = d.refobjid
     JOIN pg_namespace tn ON tn.oid = t.relnamespace
     WHERE c.relkind = 'S' AND tn.nspname = 'public'
-      AND t.relname IN ('Person','Role','Permission','User','Session','AuditLog','PasswordResetToken','AccountActivationToken')
+      AND t.relname IN ('Person','Role','Permission','User','Session','AuditLog','PasswordResetToken','AccountActivationToken','Affiliate')
   LOOP
     EXECUTE format('ALTER SEQUENCE %I.%I OWNER TO sgi_owner', seq.nspname, seq.relname);
   END LOOP;
@@ -78,6 +79,7 @@ ALTER TABLE public."Session" FORCE ROW LEVEL SECURITY;
 ALTER TABLE public."AuditLog" FORCE ROW LEVEL SECURITY;
 ALTER TABLE public."PasswordResetToken" FORCE ROW LEVEL SECURITY;
 ALTER TABLE public."AccountActivationToken" FORCE ROW LEVEL SECURITY;
+ALTER TABLE public."Affiliate" FORCE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS p_103d_auth_user_pre_auth_select ON public."User";
 CREATE POLICY p_103d_auth_user_pre_auth_select ON public."User"
@@ -196,6 +198,39 @@ GRANT SELECT ("userId", "roleId") ON public."UserRole" TO sgi_app_runtime;
 GRANT SELECT ("id", "isActive") ON public."Role" TO sgi_app_runtime;
 GRANT SELECT ("roleId", "permissionId") ON public."RolePermission" TO sgi_app_runtime;
 GRANT SELECT ("id", "code") ON public."Permission" TO sgi_app_runtime;
+
+-- DEV-03B M1: Affiliate listing is permission-gated. actor_user_id is validated before
+-- casting; RBAC is evaluated through existing acyclic actor-scoped policies. No Person
+-- privilege is required or granted, and only contract projection columns are selectable.
+REVOKE ALL ON public."Affiliate" FROM PUBLIC, sgi_auth_runtime, sgi_app_runtime;
+DROP POLICY IF EXISTS p_dev03b_app_affiliate_read ON public."Affiliate";
+CREATE POLICY p_dev03b_app_affiliate_read ON public."Affiliate"
+  FOR SELECT TO sgi_app_runtime
+  USING (
+    current_user = 'sgi_app_runtime'
+    AND CASE
+      WHEN current_setting('sgi.actor_user_id', true) IS NULL THEN false
+      WHEN length(current_setting('sgi.actor_user_id', true)) NOT BETWEEN 1 AND 10 THEN false
+      WHEN current_setting('sgi.actor_user_id', true) !~ '^[1-9][0-9]*$' THEN false
+      WHEN length(current_setting('sgi.actor_user_id', true)) = 10
+           AND current_setting('sgi.actor_user_id', true) > '2147483647' THEN false
+      ELSE EXISTS (
+        SELECT 1
+        FROM public."UserRole" user_role
+        JOIN public."Role" role ON role."id" = user_role."roleId"
+        JOIN public."RolePermission" role_permission ON role_permission."roleId" = role."id"
+        JOIN public."Permission" permission ON permission."id" = role_permission."permissionId"
+        -- Keep planner-visible fallback cast safe even when malformed GUC input reaches
+        -- this subquery before CASE short-circuits; outer validation remains authority.
+        WHERE user_role."userId"::numeric = NULLIF(
+          regexp_replace(current_setting('sgi.actor_user_id', true), '[^0-9].*$', ''), ''
+        )::numeric
+          AND permission."code" = 'affiliates.read'
+      )
+    END
+  );
+GRANT SELECT ("id", "fullName", "affiliateType", "affiliationDate", "status")
+  ON public."Affiliate" TO sgi_app_runtime;
 
 DROP POLICY IF EXISTS p_103d_app_audit_append ON public."AuditLog";
 CREATE POLICY p_103d_app_audit_append ON public."AuditLog"
