@@ -11,6 +11,9 @@ describe('Health endpoint', () => {
       port: 3000,
       authDatabaseUrl: 'postgresql://auth_runtime:secret@localhost:5432/sgi',
       appDatabaseUrl: 'postgresql://app_runtime:secret@localhost:5432/sgi',
+      jwtSecret: 'test-secret',
+      jwtIssuer: 'sgi-curime-test',
+      jwtAudience: 'sgi-curime-test-api',
     });
     await app.init();
   });
@@ -19,9 +22,9 @@ describe('Health endpoint', () => {
     await app.close();
   });
 
-  it('GET /api/v1/health returns healthy status', async () => {
+  it('GET /api/health returns healthy status', async () => {
     await request(app.getHttpServer())
-      .get('/api/v1/health')
+      .get('/api/health')
       .expect(200)
       .expect({ status: 'ok' });
   });
