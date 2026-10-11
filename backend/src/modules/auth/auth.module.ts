@@ -7,6 +7,7 @@ import {
   JWT_AUTH_GUARD_OPTIONS,
   JwtAuthGuard,
 } from './guards/jwt-auth.guard';
+import { PermissionGuard } from './guards/permission.guard';
 import { AuthRepository } from './repositories/auth.repository';
 
 @Module({})
@@ -30,6 +31,7 @@ export class AuthModule {
         AuthRepository,
         LoginService,
         JwtAuthGuard,
+        PermissionGuard,
         {
           provide: JWT_AUTH_GUARD_OPTIONS,
           useValue: {
@@ -38,7 +40,12 @@ export class AuthModule {
           },
         },
       ],
-      exports: [JwtModule, JwtAuthGuard, JWT_AUTH_GUARD_OPTIONS],
+      exports: [
+        JwtModule,
+        JwtAuthGuard,
+        PermissionGuard,
+        JWT_AUTH_GUARD_OPTIONS,
+      ],
     };
   }
 }
