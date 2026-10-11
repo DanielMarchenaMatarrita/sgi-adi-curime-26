@@ -109,6 +109,94 @@ GRANT SELECT ("id", "email", "identification", "passwordHash", "status", "failed
 GRANT UPDATE ("failedLoginAttempts", "lockedAt", "lastLoginAt", "updatedAt")
   ON public."User" TO sgi_auth_runtime;
 
+-- Application identity reads are deliberately narrower than auth reads. The CASE
+-- guards every cast: missing/empty, malformed, non-positive, over-length and
+-- int4-overflow GUC values all resolve to false without attempting ::integer.
+DROP POLICY IF EXISTS p_103b_app_user_self_select ON public."User";
+DROP POLICY IF EXISTS p_103d_app_user_self_select ON public."User";
+CREATE POLICY p_103d_app_user_self_select ON public."User"
+  FOR SELECT TO sgi_app_runtime
+  USING (
+    current_user = 'sgi_app_runtime'
+    AND CASE
+      WHEN current_setting('sgi.actor_user_id', true) IS NULL THEN false
+      WHEN length(current_setting('sgi.actor_user_id', true)) NOT BETWEEN 1 AND 10 THEN false
+      WHEN current_setting('sgi.actor_user_id', true) !~ '^[1-9][0-9]*$' THEN false
+      WHEN length(current_setting('sgi.actor_user_id', true)) = 10
+           AND current_setting('sgi.actor_user_id', true) > '2147483647' THEN false
+      ELSE "id" = current_setting('sgi.actor_user_id', true)::integer
+    END
+  );
+
+GRANT SELECT ("id", "fullName", "email", "status")
+  ON public."User" TO sgi_app_runtime;
+
+-- BE-03C: actor-scoped effective-permission traversal. No policy traverses back
+-- to its own table: UserRole -> User; Role -> UserRole -> User;
+-- RolePermission -> Role -> UserRole -> User; Permission -> RolePermission.
+-- Therefore PostgreSQL never evaluates recursive RLS policies. Role and all
+-- downstream links require an active role; UserRole requires an active actor.
+DROP POLICY IF EXISTS p_103c_app_user_role_effective_select ON public."UserRole";
+CREATE POLICY p_103c_app_user_role_effective_select ON public."UserRole"
+  FOR SELECT TO sgi_app_runtime
+  USING (
+    current_user = 'sgi_app_runtime'
+    AND CASE
+      WHEN current_setting('sgi.actor_user_id', true) IS NULL THEN false
+      WHEN length(current_setting('sgi.actor_user_id', true)) NOT BETWEEN 1 AND 10 THEN false
+      WHEN current_setting('sgi.actor_user_id', true) !~ '^[1-9][0-9]*$' THEN false
+      WHEN length(current_setting('sgi.actor_user_id', true)) = 10
+           AND current_setting('sgi.actor_user_id', true) > '2147483647' THEN false
+      ELSE "userId" = current_setting('sgi.actor_user_id', true)::integer
+           AND EXISTS (
+             SELECT 1 FROM public."User" actor
+             WHERE actor."id" = "UserRole"."userId" AND actor."status" = 'ACTIVE'
+           )
+    END
+  );
+
+DROP POLICY IF EXISTS p_103c_app_role_effective_select ON public."Role";
+CREATE POLICY p_103c_app_role_effective_select ON public."Role"
+  FOR SELECT TO sgi_app_runtime
+  USING (
+    current_user = 'sgi_app_runtime'
+    AND "isActive"
+    AND EXISTS (
+      SELECT 1 FROM public."UserRole" user_role
+      WHERE user_role."roleId" = "Role"."id"
+    )
+  );
+
+DROP POLICY IF EXISTS p_103c_app_role_permission_effective_select ON public."RolePermission";
+CREATE POLICY p_103c_app_role_permission_effective_select ON public."RolePermission"
+  FOR SELECT TO sgi_app_runtime
+  USING (
+    current_user = 'sgi_app_runtime'
+    AND EXISTS (
+      SELECT 1 FROM public."Role" role
+      WHERE role."id" = "RolePermission"."roleId"
+    )
+  );
+
+DROP POLICY IF EXISTS p_103c_app_permission_effective_select ON public."Permission";
+CREATE POLICY p_103c_app_permission_effective_select ON public."Permission"
+  FOR SELECT TO sgi_app_runtime
+  USING (
+    current_user = 'sgi_app_runtime'
+    AND EXISTS (
+      SELECT 1
+      FROM public."RolePermission" role_permission
+      WHERE role_permission."permissionId" = "Permission"."id"
+    )
+  );
+
+-- Column grants are sufficient for one actor-scoped relation traversal and no
+-- catalogue management or writes. Permission code is authorization output.
+GRANT SELECT ("userId", "roleId") ON public."UserRole" TO sgi_app_runtime;
+GRANT SELECT ("id", "isActive") ON public."Role" TO sgi_app_runtime;
+GRANT SELECT ("roleId", "permissionId") ON public."RolePermission" TO sgi_app_runtime;
+GRANT SELECT ("id", "code") ON public."Permission" TO sgi_app_runtime;
+
 DROP POLICY IF EXISTS p_103d_app_audit_append ON public."AuditLog";
 CREATE POLICY p_103d_app_audit_append ON public."AuditLog"
   FOR INSERT TO sgi_app_runtime
