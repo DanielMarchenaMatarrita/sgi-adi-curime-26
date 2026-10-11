@@ -10,6 +10,7 @@ import { DatabaseModule } from './database/database.module';
 import { RuntimeConfig } from './config/runtime-config';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 import { AffiliatesModule } from './modules/affiliates/affiliates.module';
 
 @Module({
@@ -22,6 +23,7 @@ export class AppModule implements NestModule {
         HealthModule,
         DatabaseModule.register(config),
         AuthModule.register(config),
+        UsersModule.register(config),
         AffiliatesModule.register(config),
       ],
     };
