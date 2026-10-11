@@ -22,6 +22,27 @@ export interface CurrentUserResponse {
   status: UserStatus
 }
 
+export interface EffectivePermissionsResponse {
+  permissions: string[]
+}
+
+export type AffiliateStatus = 'ACTIVE' | 'INACTIVE'
+
+export interface AffiliateListItem {
+  id: number
+  fullName: string
+  affiliateType: string | null
+  affiliationDate: string
+  status: AffiliateStatus
+}
+
+export interface ListAffiliatesResponse {
+  items: AffiliateListItem[]
+  limit: number
+  offset: number
+  total: number
+}
+
 export interface ApiErrorResponse {
   statusCode: number
   timestamp: string

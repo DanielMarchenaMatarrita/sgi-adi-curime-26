@@ -12,7 +12,7 @@ export function AppLayout() {
   const { sidebarCollapsed, toggleSidebar, sidebarMobileOpen, setSidebarMobileOpen } = useApp()
 
   useEffect(() => {
-    if (status === 'anonymous') {
+    if (status === 'anonymous' || status === 'restore-error') {
       void navigate({ to: '/login', replace: true })
     }
   }, [navigate, status])

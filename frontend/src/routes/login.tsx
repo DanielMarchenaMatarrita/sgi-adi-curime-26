@@ -8,7 +8,7 @@ import { APP_NAME } from '@/app/config/constants'
 
 function LoginPage() {
     const navigate = useNavigate()
-    const { status, error, login } = useAuth()
+    const { status, error, login, retrySessionRestore } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [submitted, setSubmitted] = useState(false)
@@ -108,10 +108,16 @@ function LoginPage() {
                                     </span>
                                 </label>
 
-                                {submitted && error && (
+                                {error && (submitted || status === 'restore-error') && (
                                     <p className="rounded-lg border border-error/30 bg-error-container/40 px-3 py-2 text-sm text-on-error-container" role="alert">
                                         {error}
                                     </p>
+                                )}
+
+                                {status === 'restore-error' && (
+                                    <Button className="w-full" type="button" variant="outline" onClick={() => void retrySessionRestore()}>
+                                        Reintentar restauración de sesión
+                                    </Button>
                                 )}
 
                                 <Button className="h-11 w-full" type="submit" disabled={isSubmitting}>

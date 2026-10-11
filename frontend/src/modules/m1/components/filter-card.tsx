@@ -1,7 +1,7 @@
 import { Filter, RotateCcw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import type { M1Filters, AgeRange, MemberStatus, DistrictFilter } from '../types'
-import { AGE_RANGES, STATUS_OPTIONS, DISTRICT_OPTIONS } from '../types'
+import type { M1Filters } from '../types'
+import { STATUS_OPTIONS } from '../types'
 
 interface FilterCardProps {
   filters: M1Filters
@@ -10,8 +10,7 @@ interface FilterCardProps {
 }
 
 function FilterCard({ filters, onFilterChange, className }: FilterCardProps) {
-  const hasActiveFilters =
-    filters.ageRange !== 'all' || filters.status !== 'all' || filters.district !== 'all'
+  const hasActiveFilters = filters.status !== 'all' || filters.search.trim() !== ''
 
   return (
     <div
@@ -30,7 +29,7 @@ function FilterCard({ filters, onFilterChange, className }: FilterCardProps) {
         {hasActiveFilters && (
           <button
             onClick={() =>
-              onFilterChange({ ageRange: 'all', status: 'all', district: 'all', search: '' })
+              onFilterChange({ status: 'all', search: '' })
             }
             className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-dark transition-colors"
           >
@@ -40,41 +39,35 @@ function FilterCard({ filters, onFilterChange, className }: FilterCardProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-4">
-        {/* Rango de Edad */}
+      <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-3">
         <div className="space-y-1.5">
           <label
-            htmlFor="ageRange"
+            htmlFor="affiliate-search"
             className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant/60"
           >
-            Rango de Edad
+            Nombre completo
           </label>
-          <select
-            id="ageRange"
-            value={filters.ageRange}
-            onChange={(e) => onFilterChange({ ageRange: e.target.value as AgeRange })}
-            className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 text-sm font-medium text-on-surface transition-colors hover:border-primary/30 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
-          >
-            {AGE_RANGES.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <input
+            id="affiliate-search"
+            type="search"
+            value={filters.search}
+            onChange={(event) => onFilterChange({ search: event.target.value })}
+            placeholder="Buscar afiliado..."
+            className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 text-sm font-medium text-on-surface transition-colors placeholder:text-on-surface-variant/60 hover:border-primary/30 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
+          />
         </div>
 
-        {/* Estado Legal */}
         <div className="space-y-1.5">
           <label
             htmlFor="status"
             className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant/60"
           >
-            Estado Legal
+            Estado
           </label>
           <select
             id="status"
             value={filters.status}
-            onChange={(e) => onFilterChange({ status: e.target.value as MemberStatus | 'all' })}
+            onChange={(event) => onFilterChange({ status: event.target.value as M1Filters['status'] })}
             className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 text-sm font-medium text-on-surface transition-colors hover:border-primary/30 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
           >
             {STATUS_OPTIONS.map((opt) => (
@@ -85,34 +78,9 @@ function FilterCard({ filters, onFilterChange, className }: FilterCardProps) {
           </select>
         </div>
 
-        {/* Distrito */}
-        <div className="space-y-1.5">
-          <label
-            htmlFor="district"
-            className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant/60"
-          >
-            Distrito
-          </label>
-          <select
-            id="district"
-            value={filters.district}
-            onChange={(e) => onFilterChange({ district: e.target.value as DistrictFilter })}
-            className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 text-sm font-medium text-on-surface transition-colors hover:border-primary/30 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
-          >
-            {DISTRICT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Limpiar */}
         <div className="flex items-end">
           <button
-            onClick={() =>
-              onFilterChange({ ageRange: 'all', status: 'all', district: 'all', search: '' })
-            }
+            onClick={() => onFilterChange({ status: 'all', search: '' })}
             className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-highest px-4 py-2.5 text-sm font-semibold text-on-surface-variant transition-all hover:bg-surface-variant hover:border-outline-variant/50 active:scale-[0.98]"
           >
             Limpiar Filtros

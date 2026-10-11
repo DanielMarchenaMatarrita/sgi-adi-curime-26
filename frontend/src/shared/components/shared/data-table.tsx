@@ -41,6 +41,7 @@ interface DataTableProps<TData> {
   pageSize?: number
   currentPage?: number
   onPageChange?: (page: number) => void
+  serverPagination?: boolean
   searchPlaceholder?: string
   searchable?: boolean
   sortable?: boolean
@@ -53,6 +54,9 @@ function DataTable<TData>({
   title,
   totalRecords,
   pageSize = 10,
+  currentPage,
+  onPageChange,
+  serverPagination = false,
   searchPlaceholder = 'Buscar...',
   searchable = true,
   sortable = true,
@@ -75,14 +79,25 @@ function DataTable<TData>({
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: sortable ? getSortedRowModel() : undefined,
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: serverPagination ? undefined : getPaginationRowModel(),
     getFilteredRowModel: searchable ? getFilteredRowModel() : undefined,
     initialState: {
-      pagination: { pageSize },
+      pagination: { pageIndex: currentPage ?? 0, pageSize },
     },
   })
 
   const filteredCount = table.getFilteredRowModel().rows.length
+  const pageIndex = currentPage ?? table.getState().pagination.pageIndex
+  const pageCount = serverPagination
+    ? Math.ceil((totalRecords ?? 0) / pageSize)
+    : table.getPageCount()
+  const goToPage = (nextPage: number) => {
+    if (serverPagination) {
+      onPageChange?.(nextPage)
+      return
+    }
+    table.setPageIndex(nextPage)
+  }
 
   return (
     <div
@@ -95,7 +110,7 @@ function DataTable<TData>({
         <div className="flex items-center justify-between border-b border-outline-variant bg-surface-container-low px-md py-sm">
           {title && (
             <h3 className="text-sm font-bold uppercase tracking-wider text-on-surface-variant">
-              {title} ({filteredCount})
+               {title} ({serverPagination ? totalRecords ?? 0 : filteredCount})
             </h3>
           )}
           {searchable && (
@@ -169,19 +184,19 @@ function DataTable<TData>({
         </Table>
       </div>
 
-      {table.getPageCount() > 1 && (
+       {pageCount > 1 && (
         <div className="flex items-center justify-between border-t border-outline-variant bg-surface-container-low px-md py-sm">
           <span className="text-sm text-on-surface-variant">
-            Mostrando {table.getState().pagination.pageIndex * pageSize + 1}–
-            {Math.min((table.getState().pagination.pageIndex + 1) * pageSize, filteredCount)} de{' '}
+             Mostrando {pageIndex * pageSize + 1}–
+             {Math.min((pageIndex + 1) * pageSize, totalRecords ?? filteredCount)} de{' '}
             {totalRecords ?? filteredCount}
           </span>
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
+               onClick={() => goToPage(0)}
+               disabled={pageIndex === 0}
               className="h-8 w-8 p-0"
             >
               <ChevronsLeft className="h-4 w-4" />
@@ -189,24 +204,24 @@ function DataTable<TData>({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+               onClick={() => goToPage(pageIndex - 1)}
+               disabled={pageIndex === 0}
               className="h-8 w-8 p-0"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            {Array.from({ length: Math.min(5, table.getPageCount()) }, (_, i) => {
-              const pageIndex = i + Math.max(
-                0,
-                table.getState().pagination.pageIndex - 2
-              )
-              if (pageIndex >= table.getPageCount()) return null
+             {Array.from({ length: Math.min(5, pageCount) }, (_, i) => {
+               const pageIndex = i + Math.max(
+                 0,
+                 (currentPage ?? table.getState().pagination.pageIndex) - 2
+               )
+               if (pageIndex >= pageCount) return null
               return (
                 <Button
                   key={pageIndex}
-                  variant={pageIndex === table.getState().pagination.pageIndex ? 'default' : 'outline'}
+                   variant={pageIndex === (currentPage ?? table.getState().pagination.pageIndex) ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => table.setPageIndex(pageIndex)}
+                   onClick={() => goToPage(pageIndex)}
                   className="h-8 w-8 p-0"
                 >
                   {pageIndex + 1}
@@ -216,8 +231,8 @@ function DataTable<TData>({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+               onClick={() => goToPage(pageIndex + 1)}
+               disabled={pageIndex >= pageCount - 1}
               className="h-8 w-8 p-0"
             >
               <ChevronRight className="h-4 w-4" />
@@ -225,8 +240,8 @@ function DataTable<TData>({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
+               onClick={() => goToPage(pageCount - 1)}
+               disabled={pageIndex >= pageCount - 1}
               className="h-8 w-8 p-0"
             >
               <ChevronsRight className="h-4 w-4" />

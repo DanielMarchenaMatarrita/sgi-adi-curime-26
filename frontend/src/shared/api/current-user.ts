@@ -1,26 +1,30 @@
-import type { CurrentUserResponse } from './contracts'
+import type { CurrentUserResponse, EffectivePermissionsResponse } from './contracts'
 import { apiClient, type ApiClient } from './http-client'
 
 export interface CurrentUserService {
-  getCurrentUser(accessToken: string): Promise<CurrentUserResponse>
+  getCurrentUser(): Promise<CurrentUserResponse>
+  getEffectivePermissions(): Promise<EffectivePermissionsResponse>
 }
 
 export function createCurrentUserService(
   client: ApiClient = apiClient,
 ): CurrentUserService {
   return {
-    getCurrentUser(accessToken) {
-      return client<CurrentUserResponse>('/api/users/me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
+    getCurrentUser() {
+      return client<CurrentUserResponse>('/api/users/me')
+    },
+    getEffectivePermissions() {
+      return client<EffectivePermissionsResponse>('/api/users/me/permissions')
     },
   }
 }
 
 export const currentUserService = createCurrentUserService()
 
-export function getCurrentUser(accessToken: string): Promise<CurrentUserResponse> {
-  return currentUserService.getCurrentUser(accessToken)
+export function getCurrentUser(): Promise<CurrentUserResponse> {
+  return currentUserService.getCurrentUser()
+}
+
+export function getEffectivePermissions(): Promise<EffectivePermissionsResponse> {
+  return currentUserService.getEffectivePermissions()
 }

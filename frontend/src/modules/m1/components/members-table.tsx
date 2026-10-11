@@ -1,42 +1,46 @@
 import { useMemo } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
-import { Pencil, Eye, CheckCircle, XCircle } from 'lucide-react'
 import { StatusChip } from '@/shared/components/shared'
 import { DataTable } from '@/shared/components/shared'
-import type { Member } from '@/modules/m1/types'
+import type { AffiliateListItem } from '@/shared/api/contracts'
 
-const columnHelper = createColumnHelper<Member>()
+const columnHelper = createColumnHelper<AffiliateListItem>()
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.split(' ')[0].charAt(0)}`.toUpperCase()
+function getInitials(fullName: string): string {
+  return fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) => name.charAt(0))
+    .join('')
+    .toUpperCase()
 }
 
-function calculateAge(dateOfBirth: string): number {
-  const today = new Date()
-  const birth = new Date(dateOfBirth)
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDiff = today.getMonth() - birth.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--
-  }
-  return age
+function formatAffiliationDate(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat('es-CR', { dateStyle: 'medium' }).format(date)
 }
 
 const statusColorMap: Record<string, 'primary' | 'tertiary' | 'danger'> = {
-  VIGENTE: 'primary',
-  PENDIENTE: 'tertiary',
-  SUSPENDIDO: 'danger',
+  ACTIVE: 'primary',
+  INACTIVE: 'danger',
 }
 
 interface MembersTableProps {
-  data: Member[]
+  data: AffiliateListItem[]
+  total: number
+  limit: number
+  offset: number
+  onPageChange: (offset: number) => void
 }
 
-function MembersTable({ data }: MembersTableProps) {
+function MembersTable({ data, total, limit, offset, onPageChange }: MembersTableProps) {
   const columns = useMemo(
     () => [
       columnHelper.accessor(
-        (row: Member) => `${row.firstName} ${row.lastName}`,
+        (row: AffiliateListItem) => row.fullName,
         {
           id: 'fullName',
           header: 'Nombre Completo',
@@ -45,71 +49,33 @@ function MembersTable({ data }: MembersTableProps) {
             return (
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container text-xs font-bold text-secondary">
-                  {getInitials(member.firstName, member.lastName)}
+                  {getInitials(member.fullName)}
                 </div>
                 <span className="font-medium text-on-surface">
-                  {member.firstName} {member.lastName}
+                  {member.fullName}
                 </span>
               </div>
             )
           },
         }
       ),
-      columnHelper.accessor('documentNumber', {
-        header: 'Identificación (Cédula)',
-        cell: (info) => (
-          <span className="font-code-sm text-on-surface-variant">{info.getValue()}</span>
-        ),
+      columnHelper.accessor('affiliateType', {
+        header: 'Tipo de afiliación',
+        cell: (info) => info.getValue() ?? 'Sin especificar',
       }),
-      columnHelper.accessor('dateOfBirth', {
-        header: 'Edad',
-        cell: (info) => (
-          <span className="text-center text-on-surface">{calculateAge(info.getValue())}</span>
-        ),
-        sortingFn: (rowA, rowB) =>
-          new Date(rowA.original.dateOfBirth).getTime() -
-          new Date(rowB.original.dateOfBirth).getTime(),
-      }),
-      columnHelper.accessor('electoralValidation', {
-        header: 'Validación Electoral',
-        cell: (info) => {
-          const isValid = info.getValue()
-          return isValid ? (
-            <div className="flex justify-center">
-              <CheckCircle className="h-5 w-5 text-emerald-600" />
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <XCircle className="h-5 w-5 text-red-500" />
-            </div>
-          )
-        },
-        enableSorting: false,
+      columnHelper.accessor('affiliationDate', {
+        header: 'Fecha de afiliación',
+        cell: (info) => formatAffiliationDate(info.getValue()),
       }),
       columnHelper.accessor('status', {
-        header: 'Estado Civil / Legal',
+        header: 'Estado',
         cell: (info) => (
           <StatusChip
-            label={info.getValue()}
+            label={info.getValue() === 'ACTIVE' ? 'Activo' : 'Inactivo'}
             variant={statusColorMap[info.getValue()]}
             size="sm"
           />
         ),
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Acciones',
-        cell: () => (
-          <div className="flex justify-end gap-2">
-            <button className="rounded-lg p-1.5 text-on-surface-variant transition-colors hover:bg-primary-container/10 hover:text-primary">
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button className="rounded-lg p-1.5 text-on-surface-variant transition-colors hover:bg-primary-container/10 hover:text-primary">
-              <Eye className="h-4 w-4" />
-            </button>
-          </div>
-        ),
-        enableSorting: false,
       }),
     ],
     []
@@ -119,9 +85,13 @@ function MembersTable({ data }: MembersTableProps) {
     <DataTable
       columns={columns}
       data={data}
-      title="MIEMBROS DE LA COMUNIDAD"
-      searchable
-      searchPlaceholder="Buscar miembros..."
+      title="AFILIADOS"
+      totalRecords={total}
+      pageSize={limit}
+      currentPage={Math.floor(offset / limit)}
+      onPageChange={(page) => onPageChange(page * limit)}
+      serverPagination
+      searchable={false}
     />
   )
 }

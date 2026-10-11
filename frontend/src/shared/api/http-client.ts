@@ -11,9 +11,14 @@ export interface ApiClient {
   <T>(path: string, options?: ApiRequestOptions): Promise<T>
 }
 
-type ApiUnauthorizedHandler = (path: string) => void
+type ApiUnauthorizedHandler = (path: string, accessToken: string) => void
 
 let unauthorizedHandler: ApiUnauthorizedHandler | undefined
+let accessToken: string | null = null
+
+export function setApiAccessToken(token: string | null): void {
+  accessToken = token
+}
 
 export function setApiUnauthorizedHandler(
   handler: ApiUnauthorizedHandler | undefined,
@@ -80,6 +85,11 @@ export function createApiClient(
   ): Promise<T> {
     const { body, headers, responseType = 'json', ...requestInit } = options
     const requestHeaders = new Headers(headers)
+    const requestToken = isOwnApiPath(path) ? accessToken : null
+
+    if (requestToken !== null && !requestHeaders.has('Authorization')) {
+      requestHeaders.set('Authorization', `Bearer ${requestToken}`)
+    }
 
     if (body !== undefined && !requestHeaders.has('Content-Type')) {
       requestHeaders.set('Content-Type', 'application/json')
@@ -104,8 +114,8 @@ export function createApiClient(
     const responseBody = await parseJsonResponse(response)
 
     if (!response.ok) {
-      if (response.status === 401 && !path.startsWith('/api/auth/')) {
-        unauthorizedHandler?.(path)
+      if (response.status === 401 && requestToken !== null) {
+        unauthorizedHandler?.(path, requestToken)
       }
 
       throw new ApiHttpError(
@@ -123,6 +133,10 @@ export function createApiClient(
 
     return responseBody as T
   }
+}
+
+function isOwnApiPath(path: string): boolean {
+  return path.startsWith('/') && !path.startsWith('//')
 }
 
 async function parseJsonResponse(response: Response): Promise<unknown> {
