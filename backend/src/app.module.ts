@@ -9,6 +9,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
 import { DatabaseModule } from './database/database.module';
 import { RuntimeConfig } from './config/runtime-config';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
 })
@@ -16,7 +17,7 @@ export class AppModule implements NestModule {
   static register(config: RuntimeConfig): DynamicModule {
     return {
       module: AppModule,
-      imports: [HealthModule, DatabaseModule.register(config)],
+      imports: [HealthModule, DatabaseModule.register(config), AuthModule.register(config)],
     };
   }
 

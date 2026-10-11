@@ -10,7 +10,7 @@ export async function createApplication(
 ): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule.register(config));
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
   app.useGlobalFilters(new HttpExceptionFilter());
   app.enableShutdownHooks();
 

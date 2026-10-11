@@ -3,6 +3,9 @@ export interface RuntimeConfig {
   port: number;
   authDatabaseUrl: string;
   appDatabaseUrl: string;
+  jwtSecret: string;
+  jwtIssuer: string;
+  jwtAudience: string;
 }
 
 const validNodeEnvironments = new Set<RuntimeConfig['nodeEnv']>([
@@ -22,6 +25,9 @@ export function loadRuntimeConfig(
 
   const authDatabaseUrl = requireDatabaseUrl(environment, 'AUTH_DATABASE_URL');
   const appDatabaseUrl = requireDatabaseUrl(environment, 'APP_DATABASE_URL');
+  const jwtSecret = requireNonEmpty(environment, 'JWT_SECRET');
+  const jwtIssuer = requireNonEmpty(environment, 'JWT_ISSUER');
+  const jwtAudience = requireNonEmpty(environment, 'JWT_AUDIENCE');
 
   if (
     decodeURIComponent(new URL(authDatabaseUrl).username) ===
@@ -37,7 +43,28 @@ export function loadRuntimeConfig(
     throw new Error('PORT must be an integer between 1 and 65535');
   }
 
-  return { nodeEnv, port, authDatabaseUrl, appDatabaseUrl };
+  return {
+    nodeEnv,
+    port,
+    authDatabaseUrl,
+    appDatabaseUrl,
+    jwtSecret,
+    jwtIssuer,
+    jwtAudience,
+  };
+}
+
+function requireNonEmpty(
+  environment: NodeJS.ProcessEnv,
+  variableName: 'JWT_SECRET' | 'JWT_ISSUER' | 'JWT_AUDIENCE',
+): string {
+  const value = environment[variableName];
+
+  if (value === undefined || value.trim() === '') {
+    throw new Error(`${variableName} is required`);
+  }
+
+  return value;
 }
 
 function requireDatabaseUrl(
