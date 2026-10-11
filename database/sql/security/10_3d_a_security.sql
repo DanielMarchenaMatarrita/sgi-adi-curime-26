@@ -26,8 +26,8 @@ REVOKE sgi_migrator FROM sgi_auth_runtime, sgi_app_runtime;
 REVOKE sgi_auth_runtime FROM sgi_app_runtime;
 REVOKE sgi_app_runtime FROM sgi_auth_runtime;
 
--- Bootstrap executor retains database/schema administration. sgi_owner owns only these
--- ten relations and their identity sequences; sgi_migrator may SET ROLE sgi_owner for DDL.
+-- Bootstrap executor retains database/schema administration. sgi_owner owns Phase 10.3D-A
+-- relations plus M1 Affiliate and their identity sequences; sgi_migrator may SET ROLE sgi_owner for DDL.
 ALTER TABLE public."Person" OWNER TO sgi_owner;
 ALTER TABLE public."Role" OWNER TO sgi_owner;
 ALTER TABLE public."Permission" OWNER TO sgi_owner;

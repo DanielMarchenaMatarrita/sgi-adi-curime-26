@@ -1,12 +1,40 @@
 \set ON_ERROR_STOP on
 
+SELECT set_config('sgi.required_validator_suite', :'required_validator_suite', false);
+
 DO $$
 DECLARE
+  required_suite text := current_setting('sgi.required_validator_suite');
+  suite_pass_count integer;
+  suite_fail_count integer;
   committed_count integer;
   rollback_count integer;
   concurrent_a_count integer;
   concurrent_b_count integer;
 BEGIN
+  SELECT count(*) INTO suite_pass_count
+  FROM public."AuditLog"
+  WHERE "action" = 'E2E_SUITE_PASS'
+    AND "module" = 'e2e-suite-marker'
+    AND "entityId" = required_suite
+    AND "userId" = 1;
+  IF suite_pass_count <> 1 THEN
+    RAISE EXCEPTION 'expected one successful validator suite marker for %, got %', required_suite, suite_pass_count;
+  END IF;
+
+  SELECT count(*) INTO suite_fail_count
+  FROM public."AuditLog"
+  WHERE "action" = 'E2E_SUITE_FAIL'
+    AND "module" = 'e2e-suite-marker'
+    AND "entityId" = required_suite;
+  IF suite_fail_count <> 0 THEN
+    RAISE EXCEPTION 'validator suite % recorded % failure marker(s)', required_suite, suite_fail_count;
+  END IF;
+
+  IF required_suite <> 'database.security.integration.e2e-spec.ts' THEN
+    RETURN;
+  END IF;
+
   SELECT count(*) INTO committed_count
   FROM public."AuditLog"
   WHERE "module" = 'be-02c-b2'

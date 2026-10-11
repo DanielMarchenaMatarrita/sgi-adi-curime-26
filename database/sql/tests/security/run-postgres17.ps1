@@ -22,8 +22,12 @@ $canonical = Join-Path $repo 'supabase\migrations\20261010000000_sgi_curime_v2_i
 $security = Join-Path $repo 'database\sql\security\10_3d_a_security.sql'
 $seed = Join-Path $PSScriptRoot '00_seed_bootstrap_owner.sql'
 $validatorSeed = Join-Path $PSScriptRoot '02_seed_validator_users.sql'
+$authLoginFixture = Join-Path $PSScriptRoot '05_seed_auth_login_fixtures.sql'
+$rbacFixture = Join-Path $PSScriptRoot '07_seed_rbac_effective_permission_fixtures.sql'
+$affiliateFixture = Join-Path $PSScriptRoot '08_seed_affiliate_read_fixture.sql'
 $validatorPrincipals = Join-Path $PSScriptRoot '03_create_validator_principals.sql'
 $assertions = Join-Path $PSScriptRoot '01_security_assertions.sql'
+$suiteMarker = Join-Path $PSScriptRoot '06_record_validator_suite_marker.sql'
 $postAssertions = Join-Path $PSScriptRoot '04_verify_validator_results.sql'
 
 function New-ExecutionId {
@@ -183,18 +187,55 @@ $postgresId = $null
 $validatorId = $null
 Assert-DisposableDatabaseName $databaseName
 
-function Invoke-PsqlFile([string]$Path) {
+function Invoke-PsqlFile([string]$Path, [hashtable]$Variables = @{}) {
   & docker cp $Path "${postgresId}:/tmp/input.sql"
   if ($LASTEXITCODE -ne 0) { throw "docker cp failed: $Path" }
   # Unix socket in isolated PostgreSQL container; no credential material is supplied.
-  & docker exec $postgresId psql -v ON_ERROR_STOP=1 -U postgres -d $databaseName -f /tmp/input.sql
+  $psqlArguments = @('exec', $postgresId, 'psql', '-v', 'ON_ERROR_STOP=1')
+  foreach ($entry in $Variables.GetEnumerator()) {
+    $psqlArguments += @('-v', "$($entry.Key)=$($entry.Value)")
+  }
+  $psqlArguments += @('-U', 'postgres', '-d', $databaseName, '-f', '/tmp/input.sql')
+  & docker @psqlArguments
   if ($LASTEXITCODE -ne 0) { throw "psql failed: $Path" }
+}
+
+function Get-RequiredValidatorSuites([string[]]$Command) {
+  $supportedSuites = @(
+    'database.security.integration.e2e-spec.ts',
+    'auth.login.integration.e2e-spec.ts',
+    'users.me.integration.e2e-spec.ts',
+    'permissions.effective.integration.e2e-spec.ts',
+    'permission.guard.integration.e2e-spec.ts',
+    'affiliates.read.integration.e2e-spec.ts'
+  )
+  $selectedSuites = [System.Collections.Generic.List[string]]::new()
+
+  foreach ($argument in $Command) {
+    foreach ($match in [regex]::Matches($argument, '[A-Za-z0-9._-]+\.integration\.e2e-spec\.ts')) {
+      $suite = $match.Value
+      if ($suite -notin $supportedSuites) {
+        throw "No post-assertion marker protocol is defined for selected suite '$suite'."
+      }
+      if (-not $selectedSuites.Contains($suite)) {
+        $selectedSuites.Add($suite)
+      }
+    }
+  }
+
+  # Preserve existing no-explicit-suite behavior: validate historical RLS suite markers.
+  if ($selectedSuites.Count -eq 0) {
+    $selectedSuites.Add('database.security.integration.e2e-spec.ts')
+  }
+
+  return $selectedSuites.ToArray()
 }
 
 try {
   if ($RunSecurityValidation) {
-    $securityInputs = @($canonical, $security, $seed, $validatorSeed, $validatorPrincipals, $assertions)
+    $securityInputs = @($canonical, $security, $seed, $validatorSeed, $authLoginFixture, $rbacFixture, $affiliateFixture, $validatorPrincipals, $assertions)
     if ($RunPrismaValidation) {
+      $securityInputs += $suiteMarker
       $securityInputs += $postAssertions
     }
     foreach ($path in $securityInputs) {
@@ -228,9 +269,21 @@ try {
 
   Wait-ForPostgres $postgresId $ReadinessTimeoutSeconds
   if ($RunSecurityValidation) {
+    $passwordBytes = [byte[]]::new(24)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($passwordBytes)
+    $authLoginPassword = [Convert]::ToBase64String($passwordBytes)
+    $jwtSecretBytes = [byte[]]::new(48)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($jwtSecretBytes)
+    $jwtSecret = [Convert]::ToBase64String($jwtSecretBytes)
+    $hashScript = "const argon2=require('argon2'); argon2.hash(process.argv[1], { type: argon2.argon2id, memoryCost: 65536, timeCost: 3, parallelism: 1 }).then(value => process.stdout.write(value));"
+    $authLoginPasswordHash = (& pnpm --dir (Join-Path $repo 'backend') exec node -e $hashScript $authLoginPassword | Out-String).Trim()
+    if ([string]::IsNullOrWhiteSpace($authLoginPasswordHash)) { throw 'Could not generate isolated Argon2id login fixture hash.' }
     Invoke-PsqlFile $canonical
     Invoke-PsqlFile $seed
     Invoke-PsqlFile $validatorSeed
+    Invoke-PsqlFile $authLoginFixture @{ auth_login_password_hash = $authLoginPasswordHash }
+    Invoke-PsqlFile $rbacFixture
+    Invoke-PsqlFile $affiliateFixture
     Invoke-PsqlFile $security
     Invoke-PsqlFile $security # repeatability check
     Invoke-PsqlFile $validatorPrincipals
@@ -242,12 +295,17 @@ try {
   }
 
   if ($RunPrismaValidation) {
+    $requiredValidatorSuites = Get-RequiredValidatorSuites $ValidatorCommand
     $validatorArguments = @(
       'run', '-d', '--name', $validatorName, '--network', $networkId
     ) + $labels + @(
       '-e', 'NODE_ENV=test',
       '-e', "AUTH_DATABASE_URL=postgresql://sgi_auth_validator@postgres:5432/${databaseName}?connection_limit=1",
       '-e', "APP_DATABASE_URL=postgresql://sgi_app_validator@postgres:5432/${databaseName}?connection_limit=1",
+      '-e', "JWT_SECRET=$jwtSecret",
+      '-e', 'JWT_ISSUER=sgi-curime-integration',
+      '-e', 'JWT_AUDIENCE=sgi-curime-api-integration',
+      '-e', "AUTH_LOGIN_TEST_PASSWORD=$authLoginPassword",
       '--mount', "type=bind,src=$repo,dst=/workspace,readonly",
       $ValidatorImage
     ) + $ValidatorCommand
@@ -261,7 +319,10 @@ try {
     # Preserve focused validator/Jest evidence before finally removes this disposable container.
     & docker logs $validatorId
     if ($LASTEXITCODE -ne 0) { throw "Could not read Prisma validator logs for '$validatorId'." }
-    Invoke-PsqlFile $postAssertions
+    foreach ($suite in $requiredValidatorSuites) {
+      Invoke-PsqlFile $suiteMarker @{ required_validator_suite = $suite }
+      Invoke-PsqlFile $postAssertions @{ required_validator_suite = $suite }
+    }
     'Prisma/RLS disposable integration validation: PASS'
   }
 }
