@@ -1,0 +1,2 @@
+export const AUTH_PRISMA_CLIENT = Symbol('AUTH_PRISMA_CLIENT');
+export const APP_PRISMA_CLIENT = Symbol('APP_PRISMA_CLIENT');

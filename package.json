@@ -3,5 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "description": "SGI ADI Curime V2 monorepo design workspace",
-  "scripts": {}
+  "scripts": {
+    "prisma:validate": "prisma validate --schema database/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema database/prisma/schema.prisma",
+    "local:postgres:start": "docker compose --env-file .env.local -f infra/docker/compose.yaml start postgres",
+    "local:prisma:verify": "node --env-file=.env.local scripts/verify-prisma-connections.cjs",
+    "local:backend:start": "pnpm --dir backend run build && node --env-file=.env.local backend/dist/main.js",
+    "local:api:validate": "node scripts/validate-dev-03b-api.cjs"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3"
+  },
+  "devDependencies": {
+    "prisma": "6.19.3"
+  }
 }
