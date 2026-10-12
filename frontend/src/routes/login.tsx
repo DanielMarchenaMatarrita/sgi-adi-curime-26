@@ -45,10 +45,10 @@ function LoginPage() {
                             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
                                 Acceso institucional
                             </p>
-                            <h1 className="max-w-md font-display text-5xl leading-[0.95]">
+                            <h1 className="max-w-[28rem] font-display text-5xl leading-[0.95]">
                                 Tu comunidad, en buenas manos.
                             </h1>
-                            <p className="mt-5 max-w-sm text-sm leading-6 text-white/75">
+                            <p className="mt-5 max-w-[24rem] text-sm leading-6 text-white/75">
                                 Ingresa para continuar en el ecosistema digital de tu asociación.
                             </p>
                         </div>
@@ -56,7 +56,7 @@ function LoginPage() {
                     </div>
 
                     <div className="flex min-h-[520px] items-center p-6 sm:p-10">
-                        <div className="mx-auto w-full max-w-sm">
+                        <div className="mx-auto w-full max-w-[24rem]">
                             <div className="mb-8 md:hidden">
                                 <div className="mb-5 flex items-center gap-3 text-primary">
                                     <Trees className="h-6 w-6" />
