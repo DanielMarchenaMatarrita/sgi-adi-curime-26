@@ -1,8 +1,8 @@
 # Casos de uso — SGI-Curime V2
 
-**Estado:** registro técnico preliminar, en revisión; no equivale a aprobación de la ADI.  
-**Línea base funcional:** especificación V0.2 del 15 de octubre de 2026 (155 CU; 15 vistas DCU; 14 módulos M1–M14; 7 macroprocesos).  
-**Corte de evidencia de implementación:** `main@8e4c76aba82cad8b3a0e492bd8210906213bbbeb` (16 de octubre de 2026).  
+**Estado:** registro técnico preliminar, en revisión; no equivale a aprobación de la ADI.
+**Línea base funcional:** especificación V0.2 del 15 de octubre de 2026 (155 CU; 15 vistas DCU; 14 módulos M1–M14; 7 macroprocesos).
+**Corte de evidencia de implementación:** `main@8e4c76aba82cad8b3a0e492bd8210906213bbbeb` (16 de octubre de 2026).
 **Advertencia:** los DCU son vistas del catálogo, no módulos nuevos. Los códigos y títulos se mantienen como en la V0.2.
 
 ## Archivos y fuente única
