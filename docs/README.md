@@ -11,6 +11,14 @@
 | [Operación](operations/README.md) | Despliegues y operaciones futuras | Índice preparado |
 | [Calidad](quality/README.md) | Controles, pruebas, verificación de fuentes | Índice preparado |
 
+## Casos de uso y seguimiento
+
+- [Procesos funcionales](functional/README.md)
+- [Catálogo de casos de uso y checklists](functional/use-cases/README.md)
+- [Gobierno documental](governance/control-documental.md)
+- [Trazabilidad de pruebas](quality/traceability/README.md)
+- [Hoja de ruta](management/roadmap.md)
+
 ## Reglas de publicación
 
 - Cada documento debe indicar estado (`BORRADOR`, `VALIDADO FUNCIONAL`, `TARGET CONGELADO`, `IMPLEMENTADO`, `VERIFICADO`), procedencia y fecha.
