@@ -98,8 +98,8 @@ export class AppDatabaseService implements OnApplicationShutdown {
       const details = entry.details === undefined ? null : JSON.stringify(entry.details);
 
       await tx.$executeRaw`
-        INSERT INTO public."AuditLog" (
-          "action", "module", "entityType", "entityId", "details", "ipAddress", "userAgent", "userId"
+        INSERT INTO public.audit_logs (
+          action, module, entity_type, entity_id, details, ip_address, user_agent, user_id
         ) VALUES (
           ${entry.action}, ${entry.module}, ${entry.entityType ?? null}, ${entry.entityId ?? null},
           ${details}::jsonb, ${entry.ipAddress ?? null}, ${entry.userAgent ?? null}, ${actorUserId}

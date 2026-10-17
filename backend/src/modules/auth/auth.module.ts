@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { RuntimeConfig } from '../../config/runtime-config';
 import { AuthController } from './controllers/auth.controller';
@@ -10,6 +10,7 @@ import {
 import { PermissionGuard } from './guards/permission.guard';
 import { AuthRepository } from './repositories/auth.repository';
 
+@Global()
 @Module({})
 export class AuthModule {
   static register(config: RuntimeConfig): DynamicModule {

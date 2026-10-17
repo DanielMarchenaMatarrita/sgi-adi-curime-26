@@ -78,7 +78,7 @@ describe('RLS transaction context', () => {
     expect(calls[0]).toEqual({ strings: ['SET LOCAL ROLE sgi_app_runtime'], values: [] });
     expect(calls[1].values).toEqual(['17']);
     expect(calls[2].values).toEqual(['']);
-    expect(calls[3].strings.join('')).toContain('INSERT INTO public."AuditLog"');
+    expect(calls[3].strings.join('')).toContain('INSERT INTO public.audit_logs');
     expect(calls[3].strings.join('')).not.toContain('RETURNING');
     expect(calls[3].values).toEqual([
       'CREATE',
