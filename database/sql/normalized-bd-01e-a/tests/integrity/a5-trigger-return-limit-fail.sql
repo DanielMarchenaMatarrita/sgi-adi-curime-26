@@ -1,0 +1,12 @@
+BEGIN;
+INSERT INTO public.people (id,first_name,identification,email,updated_at) VALUES (2100000011,'A5 Return Receiver','A5-SYNTHETIC-2100000011','a5.return.2100000011@example.invalid',timestamp '2026-01-01 00:00:00');
+INSERT INTO public.users (id,full_name,identification,email,status,person_id,updated_at) VALUES (2100000011,'A5 Return Receiver','A5-SYNTHETIC-2100000011','a5.return.2100000011@example.invalid','ACTIVE',2100000011,timestamp '2026-01-01 00:00:00');
+INSERT INTO public.inventory_categories (id,name,is_active,updated_at) VALUES (2100000011,'A5 Return Category',true,timestamp '2026-01-01 00:00:00');
+INSERT INTO public.inventory_items (id,code,name,current_quantity,minimum_quantity,unit,status,condition,category_id,updated_at) VALUES (2100000011,'A5-RETURN-ITEM','A5 Return Item',1,0,'unidad','ACTIVE','GOOD',2100000011,timestamp '2026-01-01 00:00:00');
+INSERT INTO public.inventory_loans (id,quantity,borrower_name,loan_date,expected_return_date,status,item_id,updated_at) VALUES (2100000011,1,'A5 Synthetic Borrower',timestamp '2026-01-01 00:00:00',timestamp '2026-01-02 00:00:00','ACTIVE',2100000011,timestamp '2026-01-01 00:00:00');
+INSERT INTO public.inventory_stock_lots (id,code,item_id,quantity,condition,status) VALUES (2100000011,'A5-RETURN-LOT',2100000011,1.000,'GOOD','AVAILABLE');
+INSERT INTO public.inventory_loan_checkout_allocations (id,loan_id,lot_id,quantity) VALUES (2100000011,2100000011,2100000011,1.000);
+INSERT INTO public.inventory_loan_returns (id,loan_id,return_number,received_by_user_id,received_at,status) VALUES (2100000011,2100000011,1,2100000011,timestamp '2026-01-02 00:00:00','RECEIVED');
+INSERT INTO public.inventory_loan_return_details (id,return_id,checkout_allocation_id,quantity,condition) VALUES (2100000011,2100000011,2100000011,2.000,'GOOD');
+SET CONSTRAINTS trg_inventory_loan_return_details_return_allocation_limit_event IMMEDIATE;
+ROLLBACK;

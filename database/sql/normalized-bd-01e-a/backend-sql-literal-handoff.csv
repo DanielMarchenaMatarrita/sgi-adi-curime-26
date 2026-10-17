@@ -1,0 +1,10 @@
+consumer,original_sql_identifier,normalized_sql_identifier,required_action
+backend/src/database/database.service.ts,public."AuditLog",public.audit_logs,replace literal table
+backend/src/database/database.service.ts,"entityType";"entityId";"ipAddress";"userAgent";"userId",entity_type;entity_id;ip_address;user_agent;user_id,replace literal columns
+backend/src/modules/users/repositories/users.repository.ts,public."UserRole";public."Role";public."RolePermission";public."Permission",public.user_roles;public.roles;public.role_permissions;public.permissions,replace literal tables
+backend/src/modules/users/repositories/users.repository.ts,"roleId";"permissionId",role_id;permission_id,replace literal columns
+backend/src/modules/auth/guards/permission.guard.ts,public."UserRole";public."Role";public."RolePermission";public."Permission",public.user_roles;public.roles;public.role_permissions;public.permissions,replace literal tables
+backend/src/modules/auth/guards/permission.guard.ts,"roleId";"permissionId",role_id;permission_id,replace literal columns
+backend/test/*.integration.e2e-spec.ts,public."User";public."AuditLog",public.users;public.audit_logs,replace literal tables
+backend/test/*.integration.e2e-spec.ts,"fullName";"entityId";"userId",full_name;entity_id;user_id,replace literal columns
+backend/src/database/database.service.spec.ts,INSERT INTO public."AuditLog",INSERT INTO public.audit_logs,replace expected literal
