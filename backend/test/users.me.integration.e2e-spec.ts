@@ -104,7 +104,7 @@ describe('GET /api/users/me', () => {
 
     await expect(
       appDatabase.withActor(1, (tx) =>
-        tx.$queryRaw`SELECT "identification" FROM public."User"`,
+        tx.$queryRaw`SELECT "identification" FROM public.users`,
       ),
     ).rejects.toMatchObject({ meta: { code: '42501' } });
   });

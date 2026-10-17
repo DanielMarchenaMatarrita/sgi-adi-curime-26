@@ -1,6 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { RuntimeConfig } from '../../config/runtime-config';
-import { AuthModule } from '../auth/auth.module';
 import { UsersController } from './controllers/users.controller';
 import { GetCurrentUserService } from './features/get-current-user/get-current-user.service';
 import { GetEffectivePermissionsService } from './features/get-effective-permissions/get-effective-permissions.service';
@@ -11,7 +10,6 @@ export class UsersModule {
   static register(config: RuntimeConfig): DynamicModule {
     return {
       module: UsersModule,
-      imports: [AuthModule.register(config)],
       controllers: [UsersController],
       providers: [
         UsersRepository,

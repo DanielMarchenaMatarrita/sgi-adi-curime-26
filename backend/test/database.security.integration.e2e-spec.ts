@@ -210,7 +210,7 @@ describe('disposable Prisma/RLS integration', () => {
 
         const rows = await authDatabase!.withLookup(
             'ana@example.test',
-            (tx) => tx.$queryRaw<UserRow[]>`SELECT "id", "email" FROM public."User"`,
+            (tx) => tx.$queryRaw<UserRow[]>`SELECT "id", "email" FROM public.users`,
         );
         expect(rows).toEqual([{ id: 1, email: 'ana@example.test' }]);
 
@@ -219,7 +219,7 @@ describe('disposable Prisma/RLS integration', () => {
         await expectPermissionDenied(() =>
             authDatabase!.withLookup(
                 'ana@example.test',
-                (tx) => tx.$queryRaw`SELECT "fullName" FROM public."User"`,
+                (tx) => tx.$queryRaw`SELECT "full_name" FROM public.users`,
             ),
         );
 
@@ -229,7 +229,7 @@ describe('disposable Prisma/RLS integration', () => {
         await expectPermissionDenied(() =>
             authDatabase!.withLookup(
                 'ana@example.test',
-                (tx) => tx.$executeRaw`INSERT INTO public."AuditLog" ("action", "module", "userId") VALUES ('DENIED', 'integration', 1)`,
+                (tx) => tx.$executeRaw`INSERT INTO public.audit_logs (action, module, user_id) VALUES ('DENIED', 'integration', 1)`,
             ),
         );
 
@@ -268,14 +268,14 @@ describe('disposable Prisma/RLS integration', () => {
         await expectPermissionDenied(() =>
             appDatabase!.withActor(
                 1,
-                (tx) => tx.$queryRaw`SELECT "id" FROM public."User"`,
+                (tx) => tx.$queryRaw`SELECT "id" FROM public.users`,
             ),
         );
 
         await expectPermissionDenied(() =>
             appDatabase!.withActor(
                 1,
-                (tx) => tx.$executeRaw`INSERT INTO public."AuditLog" ("action", "module", "userId") VALUES ('DENIED', 'integration', 2)`,
+                (tx) => tx.$executeRaw`INSERT INTO public.audit_logs (action, module, user_id) VALUES ('DENIED', 'integration', 2)`,
             ),
         );
 
@@ -295,7 +295,7 @@ describe('disposable Prisma/RLS integration', () => {
         await expect(
             appDatabase!.withActor(1, async (tx) => {
                 await tx.$executeRaw`
-                    INSERT INTO public."AuditLog" ("action", "module", "entityId", "userId")
+                    INSERT INTO public.audit_logs (action, module, entity_id, user_id)
                     VALUES ('BE02C_B2_ROLLBACK', 'be-02c-b2', 'rollback-marker', 1)
                 `;
                 throw new Error('rollback sentinel');
@@ -319,7 +319,7 @@ describe('disposable Prisma/RLS integration', () => {
                     `;
                     await tx.$queryRaw`SELECT 1 FROM pg_sleep(0.2)`;
                     await tx.$executeRaw`
-                        INSERT INTO public."AuditLog" ("action", "module", "entityId", "userId")
+                        INSERT INTO public.audit_logs (action, module, entity_id, user_id)
                         VALUES ('BE02C_B2_CONCURRENT', 'be-02c-b2', ${`concurrent-actor-${actorUserId}`}, ${actorUserId})
                     `;
                     return state[0];

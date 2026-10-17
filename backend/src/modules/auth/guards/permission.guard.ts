@@ -54,10 +54,10 @@ export class PermissionGuard implements CanActivate {
     return this.appDatabase.withActor(actorUserId, (tx) =>
       tx.$queryRaw<EffectivePermission[]>`
         SELECT DISTINCT p."code"
-        FROM public."UserRole" ur
-        JOIN public."Role" r ON r."id" = ur."roleId"
-        JOIN public."RolePermission" rp ON rp."roleId" = r."id"
-        JOIN public."Permission" p ON p."id" = rp."permissionId"
+        FROM public.user_roles ur
+        JOIN public.roles r ON r."id" = ur.role_id
+        JOIN public.role_permissions rp ON rp.role_id = r."id"
+        JOIN public.permissions p ON p."id" = rp.permission_id
       `,
     );
   }
